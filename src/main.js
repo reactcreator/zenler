@@ -203,7 +203,9 @@ function render() {
   const allResults = getAllMatches(state.query);
   const results = allResults.slice(0, state.resultLimit);
   const hasMoreResults = allResults.length > results.length;
-  if (!results.some((faq) => String(faq.id) === String(state.selected?.id))) {
+  if (!state.query.trim() && !state.isThinking) {
+    state.selected = null;
+  } else if (!results.some((faq) => String(faq.id) === String(state.selected?.id))) {
     state.selected = results[0] || null;
   }
 
@@ -285,13 +287,18 @@ function render() {
 function renderAgentAnswer(faq, results = []) {
   if (!faq) {
     const offPlatform = state.query.trim() && isOffPlatformQuery(state.query);
+    const isInitial = !state.query.trim() && !state.isThinking;
     return `
-      <div class="thinking-block">
-        <span></span><span></span><span></span>
-      </div>
+      ${isInitial ? `<div class="match-meta"><span>Zenler FAQ Assistant</span><span>Ready</span></div><h2>ASK A QUESTION</h2>` : `
+        <div class="thinking-block">
+          <span></span><span></span><span></span>
+        </div>
+      `}
       <p class="answer-text">${offPlatform
         ? "I can help with Zenler product and support questions. Try asking about Zenler courses, memberships, live sessions, funnels, email, communities, payments, domains, blogs or analytics."
-        : "Ask a Zenler product question to search the FAQ bank."}</p>
+        : isInitial
+          ? "Type a Zenler question on the left and I will search the FAQ bank, product knowledge vault, support resources and tutorial links to give you the best support-ready answer. You can ask about courses, memberships, marketing funnels, blogs, communities, live sessions, email, automations, payments, domains, analytics and more."
+          : "Ask a Zenler product question to search the FAQ bank."}</p>
     `;
   }
 
