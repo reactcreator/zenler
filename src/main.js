@@ -17,6 +17,14 @@ const zenlerTerms = [
 const timestampPattern = /\b\d{1,2}:\d{2}(?::\d{2})?\b/g;
 const emojiPattern = /[\p{Extended_Pictographic}\uFE0F]/gu;
 const transcriptNoisePattern = /^use the relevant zenler settings for this workflow\.?\s*/i;
+const transcriptDerivedPatterns = [
+  /\b(i am|i'm|i was|i had|i have|i want|i need|i think|i don't|i can't|i realized|i realise|my client|my daughter)\b/i,
+  /\b(let me|gonna|wanna|yeah|uh|um|sorry,|oh,|no, no|link in chat|in the chat|facebook group)\b/i,
+  /\b(you can you can|and and|the the|to to|that that|this this|it it|what i|when i|if i)\b/i,
+  /\b(notebook\s*lm|notebookllm|substack|twitter|google notebooks|google's notebooks|youtube channel)\b/i,
+  /,\?/,
+  /^(and|but|because|with|that|if|no|now|sorry)\b/i
+];
 
 function removeSources(value) {
   return value
@@ -57,7 +65,29 @@ function isZenlerFaq(faq) {
   const isClearlyOffTopic = offTopicTerms.some((term) => question.includes(term) || text.includes(term));
   const cleanedAnswer = cleanAnswer(faq.answer);
   const isNoisyTranscript = transcriptNoisePattern.test(faq.answer) && cleanedAnswer.length < 140;
-  return hasZenlerSignal && !isClearlyOffTopic && !isNoisyTranscript && cleanedAnswer.length > 35;
+  return hasZenlerSignal
+    && !isClearlyOffTopic
+    && !isNoisyTranscript
+    && !isTranscriptDerivedFaq(faq)
+    && cleanedAnswer.length > 35;
+}
+
+function isTranscriptDerivedFaq(faq) {
+  const answer = cleanAnswer(faq.answer);
+  const text = `${faq.question} ${answer}`;
+  const numericId = Number(faq.id);
+  const knownTranscriptBatch = Number.isFinite(numericId) && numericId >= 49 && numericId < 186;
+  const startsLikeTranscript = /^[a-z]/.test(answer) && !/^(yes|no|go to|use|open|create|add|set|check|confirm|review)\b/i.test(answer);
+  const firstPersonMatches = answer.match(/\b(i|i'm|i've|i'd|me|my|mine)\b/gi) || [];
+  const secondPersonTranscript = answer.match(/\byou\b/gi) || [];
+  const repeatedFiller = /\b(\w+)\s+\1\b/i.test(answer);
+
+  return knownTranscriptBatch
+    || transcriptDerivedPatterns.some((pattern) => pattern.test(text))
+    || startsLikeTranscript
+    || firstPersonMatches.length >= 2
+    || (firstPersonMatches.length >= 1 && secondPersonTranscript.length >= 4)
+    || repeatedFiller;
 }
 
 function zenlerizeAnswer(answer) {
@@ -446,7 +476,7 @@ function renderAgentAnswer(faq, results = []) {
       <p class="answer-text">${offPlatform
         ? "I can help with Zenler product and support questions. Try asking about Zenler courses, memberships, live sessions, funnels, email, communities, payments, domains, blogs or analytics."
         : isInitial
-          ? "Type a Zenler question on the left and I will search the FAQ bank, product knowledge vault, support resources and tutorial links to give you the best support-ready answer. You can ask about courses, memberships, marketing funnels, blogs, communities, live sessions, email, automations, payments, domains, analytics and more."
+          ? "Type a Zenler question on the left and I will search the refined FAQ bank, product knowledge vault, support resources and official Zenler pages to give you the best support-ready answer. You can ask about courses, memberships, marketing funnels, blogs, communities, live sessions, email, automations, payments, domains, analytics and more."
           : "I do not have a strong enough Zenler FAQ match for that wording. Try asking it more specifically with the feature name, page area, or workflow you are using. If you still need help, contact support@zenler.com."}</p>
     `;
   }

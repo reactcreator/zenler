@@ -167,14 +167,13 @@ export const productKnowledge = [
     category: "Resources",
     question: "Where should I learn more about Zenler features?",
     answer:
-      "For learning Zenler, start with the Quick Start Guide if you are new, then use The Complete Guide to Zenler as the searchable platform library. For strategy and deeper topics, use the Zenler Blog, official support collections, tutorial courses and the Educational Live Support Desk videos. The knowledge vault includes resource paths for courses, memberships, funnels, blogs, communities, coaching, live sessions, email marketing, automations and analytics.",
+      "For learning Zenler, start with the Quick Start Guide if you are new, then use The Complete Guide to Zenler as the searchable platform library. For strategy and deeper topics, use the Zenler Blog, official support collections and structured tutorial courses. The app avoids raw transcript answers and uses refined FAQ, product and support resources for courses, memberships, funnels, blogs, communities, coaching, live sessions, email marketing, automations and analytics.",
     keywords: ["resources", "learn", "tutorial", "guide", "training", "support", "documentation", "help", "where should i start"],
     resources: [
       { title: "Quick Start Guide", url: "https://tutorials.newzenler.com/courses/zenler-quick-start-guide-for-beginners" },
       { title: "The Complete Guide to Zenler", url: "https://tutorials.newzenler.com/courses/the-complete-guide-to-zenler" },
       { title: "Zenler support center", url: "https://support.newzenler.com/en/" },
-      { title: "Zenler Blog", url: "https://www.newzenler.com/blog" },
-      { title: "Zenler YouTube channel", url: "https://www.youtube.com/@zenler" }
+      { title: "Zenler Blog", url: "https://www.newzenler.com/blog" }
     ]
   }
 ];
