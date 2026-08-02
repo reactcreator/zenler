@@ -475,11 +475,22 @@ function renderResources(faq) {
   if (!faq.resources?.length) return "";
   return `
     <div class="resource-links">
-      ${faq.resources.slice(0, 4).map((resource) => `
-        <a href="${escapeHtml(resource.url)}" target="_blank" rel="noreferrer">${escapeHtml(resource.title)}</a>
-      `).join("")}
+      ${faq.resources.slice(0, 4).map((resource) => {
+        const url = safeResourceUrl(resource.url);
+        if (!url) return "";
+        return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(resource.title)}</a>`;
+      }).join("")}
     </div>
   `;
+}
+
+function safeResourceUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" ? url.href : "";
+  } catch {
+    return "";
+  }
 }
 
 function renderEmpty() {

@@ -1,0 +1,16 @@
+{
+  "name": "Zenler FAQ Support Agent",
+  "short_name": "Zenler FAQ",
+  "description": "Support-ready answers for Zenler product and workflow questions.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#5131ed",
+  "icons": [
+    {
+      "src": "/assets/Logo_Zenler.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
