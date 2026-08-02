@@ -223,7 +223,7 @@ function render() {
         <div class="hero-grid">
           <section class="ask-zone" aria-label="Ask a question">
             <p class="eyebrow">Zenler knowledge assistant</p>
-            <h1>ALL-IN-ONE ONLINE COURSE PLATFORM TO CREATE, SELL AND GROW</h1>
+            <h1 class="zen-hero-title">ALL-IN-ONE ONLINE COURSE PLATFORM TO CREATE, SELL AND GROW</h1>
             <form class="ask-form">
               <label class="sr-only" for="questionInput">Ask a Zenler question</label>
               <textarea id="questionInput" placeholder="Ask about courses, memberships, domains, payments, webinars, analytics..." rows="4">${escapeHtml(state.query)}</textarea>
