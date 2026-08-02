@@ -169,6 +169,106 @@ const relatedGuideIds = {
   "product-resources": ["product-drip-courses", "product-marketing-tools", "product-lives"]
 };
 
+const resourceSuggestions = [
+  {
+    pattern: /\b(course|courses|lesson|lessons|drip|certificate|curriculum|student|students|quiz|quizzes|survey|surveys)\b/i,
+    resources: [
+      { title: "Courses support collection", url: "https://support.newzenler.com/en/collections/4027752-courses" },
+      { title: "The Complete Guide to Zenler", url: "https://tutorials.newzenler.com/courses/the-complete-guide-to-zenler" },
+      { title: "Quick Start Guide", url: "https://tutorials.newzenler.com/courses/zenler-quick-start-guide-for-beginners" },
+      { title: "Zenler YouTube training", url: "https://www.youtube.com/@zenler" }
+    ]
+  },
+  {
+    pattern: /\b(funnel|funnels|landing page|opt-in|lead magnet|sales page|checkout|campaign)\b/i,
+    resources: [
+      { title: "Marketing Funnels support collection", url: "https://support.newzenler.com/en/collections/4027689-marketing-funnels" },
+      { title: "Zenler Sales Funnel Software", url: "https://www.newzenler.com/features/sales-funnel-software" },
+      { title: "Marketing Funnel tutorial course", url: "https://tutorials.newzenler.com/courses/creating-a-marketing-funnel-and-marketing-it-for-leads-and-sales-conversions" },
+      { title: "Zenler YouTube training", url: "https://www.youtube.com/@zenler" }
+    ]
+  },
+  {
+    pattern: /\b(email|emails|broadcast|broadcasts|newsletter|automation|automations|sequence|tag|tags|mail)\b/i,
+    resources: [
+      { title: "Email Broadcasts support collection", url: "https://support.newzenler.com/en/collections/4027749-email-broadcasts" },
+      { title: "Zenler Business Automations", url: "https://www.newzenler.com/features/automate-your-business" },
+      { title: "Zenler Email Marketing 2026", url: "https://www.newzenler.com/blog/zenler-email-marketing-2026" },
+      { title: "3 Day Email Marketing Bootcamp", url: "https://tutorials.newzenler.com/courses/3-day-email-challenge" }
+    ]
+  },
+  {
+    pattern: /\b(live|lives|webinar|webinars|zoom|class|classes|booking|bookings|coaching|stream|streams|one-to-one|121)\b/i,
+    resources: [
+      { title: "Live support collection", url: "https://support.newzenler.com/en/collections/3591863-live" },
+      { title: "Zenler Lives complete guide", url: "https://www.newzenler.com/blog/zenler-lives-complete-guide-webinars-one-to-one-bookings-recurring-sessions-zoom-integration" },
+      { title: "Zenler Virtual Classroom Software", url: "https://www.newzenler.com/features/virtual-classroom-software" },
+      { title: "Zenler YouTube training", url: "https://www.youtube.com/@zenler" }
+    ]
+  },
+  {
+    pattern: /\b(community|communities|discussion|member|members|membership|memberships|subscription|recurring)\b/i,
+    resources: [
+      { title: "Communities support collection", url: "https://support.newzenler.com/en/collections/1697651-communities" },
+      { title: "Zenler Membership Site Software", url: "https://www.newzenler.com/features/membership-site-software" },
+      { title: "Zenler Communities Explained", url: "https://www.newzenler.com/blog/zenler-communities-explained-when-to-use-public-private-secret-course-discussions" },
+      { title: "Zenler YouTube training", url: "https://www.youtube.com/@zenler" }
+    ]
+  },
+  {
+    pattern: /\b(blog|blogs|seo|sitemap|search|google|traffic|article|articles|content)\b/i,
+    resources: [
+      { title: "Zenler Blogging Platform", url: "https://www.newzenler.com/features/blogging-platform" },
+      { title: "Zenler Blog", url: "https://www.newzenler.com/blog" },
+      { title: "Get More Traffic to Your Zenler Blog and Site", url: "https://tutorials.newzenler.com/courses/get-more-traffic-to-your-zenler-blog-and-site" },
+      { title: "Zenler YouTube training", url: "https://www.youtube.com/@zenler" }
+    ]
+  },
+  {
+    pattern: /\b(domain|domains|custom domain|site|website|page|builder|ssl|dns|dmarc)\b/i,
+    resources: [
+      { title: "Site support collection", url: "https://support.newzenler.com/en/collections/4027754-site" },
+      { title: "Zenler Website Builder", url: "https://www.newzenler.com/features/website-builder" },
+      { title: "The Complete Guide to Zenler", url: "https://tutorials.newzenler.com/courses/the-complete-guide-to-zenler" },
+      { title: "Zenler YouTube training", url: "https://www.youtube.com/@zenler" }
+    ]
+  },
+  {
+    pattern: /\b(payment|payments|pricing|price|plans|checkout|coupon|coupons|affiliate|sell|selling|sales|digital product|downloads)\b/i,
+    resources: [
+      { title: "Zenler Pricing", url: "https://www.newzenler.com/pricing" },
+      { title: "Zenler Online Payments", url: "https://www.newzenler.com/features/sell-online" },
+      { title: "Sell Digital Products With Zenler 2026", url: "https://www.newzenler.com/blog/sell-digital-products-with-zenler-2026" },
+      { title: "Zenler YouTube training", url: "https://www.youtube.com/@zenler" }
+    ]
+  },
+  {
+    pattern: /\b(learn|training|tutorial|tutorials|quick start|complete guide|accelerator|60-day|60 day|onboarding|resources)\b/i,
+    resources: [
+      { title: "Quick Start Guide", url: "https://tutorials.newzenler.com/courses/zenler-quick-start-guide-for-beginners" },
+      { title: "The Complete Guide to Zenler", url: "https://tutorials.newzenler.com/courses/the-complete-guide-to-zenler" },
+      { title: "60-Day Accelerator Program", url: "https://tutorials.newzenler.com/f/free-user-get-started-quick-with-us" },
+      { title: "Zenler YouTube training", url: "https://www.youtube.com/@zenler" }
+    ]
+  },
+  {
+    pattern: /\b(analytics|reports|reporting|dashboard|video analytics|progress|metrics)\b/i,
+    resources: [
+      { title: "Zenler Course Analytics", url: "https://www.newzenler.com/features/course-analytics" },
+      { title: "Zenler support center", url: "https://support.newzenler.com/en/" },
+      { title: "The Complete Guide to Zenler", url: "https://tutorials.newzenler.com/courses/the-complete-guide-to-zenler" },
+      { title: "Zenler YouTube training", url: "https://www.youtube.com/@zenler" }
+    ]
+  }
+];
+
+const defaultResources = [
+  { title: "Zenler support center", url: "https://support.newzenler.com/en/" },
+  { title: "The Complete Guide to Zenler", url: "https://tutorials.newzenler.com/courses/the-complete-guide-to-zenler" },
+  { title: "Zenler Blog", url: "https://www.newzenler.com/blog" },
+  { title: "Zenler YouTube training", url: "https://www.youtube.com/@zenler" }
+];
+
 const knownFeatureAliases = [
   "marketing", "marketing tools", "tools", "features",
   "zoom", "zenler live", "live", "webinar", "webinars", "live class", "live classes",
@@ -574,16 +674,34 @@ function renderResult(faq) {
 }
 
 function renderResources(faq) {
-  if (!faq.resources?.length) return "";
+  const resources = getResourcesForFaq(faq);
+  if (!resources.length) return "";
   return `
     <div class="resource-links">
-      ${faq.resources.slice(0, 4).map((resource) => {
+      <p>Useful resources</p>
+      ${resources.slice(0, 6).map((resource) => {
         const url = safeResourceUrl(resource.url);
         if (!url) return "";
         return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(resource.title)}</a>`;
       }).join("")}
     </div>
   `;
+}
+
+function getResourcesForFaq(faq) {
+  const text = `${faq.category} ${faq.question} ${faq.answer}`.toLowerCase();
+  const suggested = resourceSuggestions
+    .filter((group) => group.pattern.test(text))
+    .flatMap((group) => group.resources);
+  const seen = new Set();
+
+  return [...(faq.resources || []), ...suggested, ...defaultResources]
+    .filter((resource) => {
+      const url = safeResourceUrl(resource.url);
+      if (!url || seen.has(url)) return false;
+      seen.add(url);
+      return true;
+    });
 }
 
 function safeResourceUrl(value) {
