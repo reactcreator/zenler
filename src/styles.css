@@ -133,10 +133,10 @@ h1 {
   margin: 0 0 26px;
   font-family: "Open Sans", Inter, ui-sans-serif, system-ui, sans-serif;
   font-weight: 800;
-  font-size: clamp(2.45rem, 4.8vw, 5.4rem);
+  font-size: 56px;
   line-height: 1.06;
   letter-spacing: 0;
-  transform: scaleX(0.985);
+  transform: scaleX(0.97);
   transform-origin: center;
   text-align: center;
   text-transform: uppercase;
