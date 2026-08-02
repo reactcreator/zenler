@@ -513,10 +513,12 @@ function render() {
             <h1 class="zen-hero-title">ALL-IN-ONE ONLINE COURSE PLATFORM TO CREATE, SELL AND GROW</h1>
             <form class="ask-form">
               <label class="sr-only" for="questionInput">Ask a Zenler question</label>
-              <textarea id="questionInput" placeholder="Ask about courses, memberships, domains, payments, webinars, analytics..." rows="4">${escapeHtml(state.draftQuery)}</textarea>
-              <button class="voice-button" type="button" data-voice-input aria-label="Voice type question" title="Voice type question" aria-pressed="${state.isListening ? "true" : "false"}">
-                <span>${state.isListening ? "Stop" : "Mic"}</span>
-              </button>
+              <div class="question-input-wrap">
+                <textarea id="questionInput" placeholder="Ask about courses, memberships, domains, payments, webinars, analytics..." rows="4">${escapeHtml(state.draftQuery)}</textarea>
+                <button class="voice-button" type="button" data-voice-input aria-label="${state.isListening ? "Stop voice typing" : "Voice type question"}" title="${state.isListening ? "Stop voice typing" : "Voice type question"}" aria-pressed="${state.isListening ? "true" : "false"}">
+                  <span class="mic-icon" aria-hidden="true"></span>
+                </button>
+              </div>
               <button class="ask-button" type="submit">
                 <span>Ask</span>
                 <span class="button-spark"></span>
