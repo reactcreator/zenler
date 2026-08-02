@@ -412,6 +412,16 @@ textarea:focus {
   overflow-wrap: anywhere;
 }
 
+.resource-link span {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 0.66rem;
+  font-weight: 950;
+  line-height: 1;
+  text-transform: uppercase;
+  opacity: 0.78;
+}
+
 .resource-link:hover {
   border-color: rgba(36, 214, 181, 0.62);
 }

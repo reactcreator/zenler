@@ -1,5 +1,6 @@
 import { faqs as sourceFaqs } from "./data/faqs.js";
 import { productKnowledge } from "./data/productKnowledge.js";
+import { sitemapResources } from "./data/sitemapResources.js";
 import "./styles.css";
 
 const offTopicTerms = [
@@ -687,7 +688,7 @@ function renderResources(faq) {
       ${resources.map((resource) => {
         const url = safeResourceUrl(resource.url);
         if (!url) return "";
-        return `<a class="resource-link ${resourceClassForUrl(url)}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(resource.title)}</a>`;
+        return `<a class="resource-link ${resourceClassForUrl(url)}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer"><span>${escapeHtml(resourceLabelForUrl(url))}</span>${escapeHtml(resource.title)}</a>`;
       }).join("")}
     </div>
   `;
@@ -700,7 +701,8 @@ function getResourcesForFaq(faq) {
     .flatMap((group) => group.resources);
   const seen = new Set();
 
-  const resources = [...(faq.resources || []), ...suggested, ...defaultResources]
+  const sitemapMatches = getSitemapResourcesForFaq(faq);
+  const resources = [...(faq.resources || []), ...sitemapMatches, ...suggested, ...defaultResources]
     .filter((resource) => {
       const url = safeResourceUrl(resource.url);
       if (!url || seen.has(url)) return false;
@@ -709,6 +711,41 @@ function getResourcesForFaq(faq) {
     });
 
   return prioritizeVisibleResources(resources, 6);
+}
+
+function getSitemapResourcesForFaq(faq) {
+  const text = `${faq.category} ${faq.question} ${faq.answer}`;
+  return [
+    bestSitemapResource("blog", text),
+    bestSitemapResource("tutorial", text)
+  ].filter(Boolean);
+}
+
+function bestSitemapResource(type, text) {
+  const source = sitemapResources[type] || [];
+  const queryTokens = new Set(tokenize(text));
+  const lowerText = text.toLowerCase();
+
+  const scored = source
+    .map((resource) => {
+      const url = safeResourceUrl(resource.url);
+      if (!url) return null;
+      const urlText = new URL(url).pathname.replace(/[/_-]+/g, " ");
+      const resourceText = `${resource.title} ${urlText}`;
+      const resourceTokens = tokenize(resourceText);
+      const overlap = resourceTokens.reduce((score, token) => score + (queryTokens.has(token) ? 1 : 0), 0);
+      const titlePhrase = resource.title.toLowerCase().replace(/[^a-z0-9\s-]/g, " ").replace(/\s+/g, " ").trim();
+      const phraseBoost = titlePhrase && lowerText.includes(titlePhrase) ? 6 : 0;
+      const specificBoost = url === "https://www.newzenler.com/blog" || url === "https://tutorials.newzenler.com" ? -2 : 0;
+      return {
+        ...resource,
+        score: overlap + phraseBoost + specificBoost
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.score - a.score);
+
+  return scored[0]?.score >= 2 ? scored[0] : null;
 }
 
 function prioritizeVisibleResources(resources, limit) {
@@ -733,6 +770,18 @@ function resourceClassForUrl(value) {
   if (hostname === "blog.newzenler.com") return "resource-blog";
   if (hostname.endsWith("newzenler.com")) return "resource-zenler-site";
   return "resource-default";
+}
+
+function resourceLabelForUrl(value) {
+  const className = resourceClassForUrl(value);
+  return ({
+    "resource-blog": "Blog",
+    "resource-youtube": "YouTube",
+    "resource-tutorial": "Tutorials",
+    "resource-support": "Support",
+    "resource-zenler-site": "Zenler Site",
+    "resource-default": "Resource"
+  })[className] || "Resource";
 }
 
 function safeResourceUrl(value) {
