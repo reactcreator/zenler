@@ -739,15 +739,22 @@ function attachEvents() {
   document.querySelector("[data-voice-input]")?.addEventListener("click", toggleVoiceInput);
 
   document.querySelectorAll("[data-query]").forEach((button) => {
-    button.addEventListener("click", () => askQuestion(button.dataset.query));
+    button.addEventListener("click", () => {
+      const fromAnswerCard = Boolean(button.closest(".answer-card"));
+      askQuestion(button.dataset.query, { scrollTo: fromAnswerCard ? "answer" : null });
+    });
   });
 
   document.querySelectorAll("[data-category]").forEach((button) => {
     button.addEventListener("click", () => {
+      const fromAnswerCard = Boolean(button.closest(".answer-card"));
       state.activeCategory = button.dataset.category;
       state.resultLimit = 9;
       state.selected = searchFaqs(state.query)[0] || null;
       render();
+      if (fromAnswerCard) {
+        scheduleScrollTo("results");
+      }
     });
   });
 
@@ -756,6 +763,7 @@ function attachEvents() {
       state.selected = faqVectors.find((faq) => String(faq.id) === card.dataset.id);
       state.isThinking = false;
       render();
+      scheduleScrollTo("answer", { mobileOnly: true });
     });
   });
 
@@ -775,7 +783,7 @@ function attachEvents() {
   }
 }
 
-function askQuestion(query) {
+function askQuestion(query, options = {}) {
   state.query = query;
   state.draftQuery = query;
   state.isThinking = true;
@@ -788,7 +796,26 @@ function askQuestion(query) {
     state.selected = results[0] || null;
     state.isThinking = false;
     render();
+    if (options.scrollTo) {
+      scheduleScrollTo(options.scrollTo);
+    }
   }, 850);
+}
+
+function scheduleScrollTo(target, options = {}) {
+  const { mobileOnly = false } = options;
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      if (mobileOnly && window.matchMedia("(min-width: 681px)").matches) return;
+      const selector = target === "results" ? ".workspace" : ".answer-card";
+      const element = document.querySelector(selector);
+      if (!element) return;
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    });
+  });
 }
 
 function toggleVoiceInput() {

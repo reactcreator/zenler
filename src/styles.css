@@ -247,6 +247,7 @@ textarea:focus {
   justify-content: space-between;
   position: relative;
   overflow: hidden;
+  scroll-margin-top: 18px;
 }
 
 .answer-card::before {
@@ -463,6 +464,7 @@ textarea:focus {
   grid-template-columns: 280px minmax(0, 1fr);
   gap: 24px;
   padding-top: 24px;
+  scroll-margin-top: 18px;
 }
 
 .category-rail {
@@ -674,6 +676,11 @@ textarea:focus {
   .answer-card {
     min-height: 360px;
     padding: 22px;
+    scroll-margin-top: 12px;
+  }
+
+  .workspace {
+    scroll-margin-top: 12px;
   }
 
   .zen-hero-title {
