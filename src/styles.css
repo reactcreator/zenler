@@ -309,6 +309,29 @@ textarea:focus {
   margin-top: 26px;
 }
 
+.resource-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.resource-links a {
+  max-width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.09);
+  color: white;
+  padding: 8px 10px;
+  font-size: 0.86rem;
+  font-weight: 780;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.resource-links a:hover {
+  border-color: rgba(36, 214, 181, 0.62);
+}
+
 .support-actions .ghost-button {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.2);

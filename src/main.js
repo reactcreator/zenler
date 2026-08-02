@@ -1,10 +1,11 @@
 import { faqs as sourceFaqs } from "./data/faqs.js";
+import { productKnowledge } from "./data/productKnowledge.js";
 import "./styles.css";
 
 const offTopicTerms = [
   "notebook", "notebook lm", "notebooklm", "substack", "twitter", "udemy", "camtasia", "google drive",
   "google's notebooks", "google notebooks", "youtube channel", "youtube description workflow",
-  "paid subscription on substack"
+  "paid subscription on substack", "which ai model", "ai model should", "chatgpt", "gemini"
 ];
 
 const zenlerTerms = [
@@ -51,13 +52,18 @@ function zenlerizeQuestion(question) {
     .replace(/\bNotebook\s*LM\b/gi, "Zenler");
 }
 
-const faqs = sourceFaqs
+const refinedFaqs = sourceFaqs
   .filter(isZenlerFaq)
   .map((faq) => ({
     ...faq,
     question: zenlerizeQuestion(faq.question),
     answer: zenlerizeAnswer(faq.answer)
   }));
+
+const faqs = [
+  ...productKnowledge.map((item) => ({ ...item, curated: true })),
+  ...refinedFaqs
+];
 
 const stopWords = new Set([
   "a", "an", "and", "are", "as", "at", "be", "by", "can", "do", "does", "for", "from", "how",
@@ -74,10 +80,10 @@ const state = {
 
 const categories = ["All", ...Array.from(new Set(faqs.map((faq) => faq.category)))];
 const quickQuestions = [
+  "What marketing tools does Zenler have?",
   "Can I drip course content over time?",
   "How do I connect my custom domain?",
   "Can I run live classes or webinars?",
-  "What analytics are available?",
   "Can I create memberships in Zenler?"
 ];
 
@@ -92,9 +98,18 @@ const tokenize = (value) =>
 const faqVectors = faqs.map((faq) => {
   const questionTokens = tokenize(faq.question);
   const answerTokens = tokenize(faq.answer);
+  const keywordTokens = tokenize((faq.keywords || []).join(" "));
   return {
     ...faq,
-    tokens: [...questionTokens, ...questionTokens, ...answerTokens, ...tokenize(faq.category)]
+    tokens: [
+      ...questionTokens,
+      ...questionTokens,
+      ...answerTokens,
+      ...keywordTokens,
+      ...keywordTokens,
+      ...keywordTokens,
+      ...tokenize(faq.category)
+    ]
   };
 });
 
@@ -110,11 +125,29 @@ function scoreFaq(faq, query) {
     return score + (found ? 0.8 : 0);
   }, 0);
   const categoryBoost = state.activeCategory === "All" || state.activeCategory === faq.category ? 1.15 : 0.74;
+  const curatedBoost = faq.curated ? productGuideBoost(faq, queryTokens, query) : 1;
 
-  return (exactPhrase + overlap + partial) * categoryBoost;
+  return (exactPhrase + overlap + partial) * categoryBoost * curatedBoost;
+}
+
+function productGuideBoost(faq, queryTokens, query) {
+  const queryText = query.toLowerCase();
+  const keywordMatches = (faq.keywords || []).filter((keyword) => queryText.includes(keyword)).length;
+  const broadCapabilityQuestion = /\b(what|which|have|include|tools|features|can zenler|does zenler)\b/i.test(query);
+  const marketingIntent = /\b(marketing|promote|sell|lead|sales|funnel|audience|grow)\b/i.test(query);
+  const topicMatch = queryTokens.some((token) => faq.tokens.includes(token));
+
+  let boost = 1.8;
+  if (keywordMatches) boost += keywordMatches * 0.9;
+  if (broadCapabilityQuestion) boost += 1.2;
+  if (marketingIntent && faq.id === "product-marketing-tools") boost += 2.4;
+  if (topicMatch) boost += 0.8;
+  return boost;
 }
 
 function searchFaqs(query) {
+  if (isOffPlatformQuery(query)) return [];
+
   const scoped = state.activeCategory === "All"
     ? faqVectors
     : faqVectors.filter((faq) => faq.category === state.activeCategory);
@@ -145,6 +178,10 @@ function formatAnswer(answer) {
 }
 
 function answerIntro(faq) {
+  if (faq.curated) {
+    return `Zenler product guidance: ${formatAnswer(faq.answer)}`;
+  }
+
   const starts = [
     "I found the closest Zenler FAQ match.",
     "Here is the most relevant support answer.",
@@ -155,7 +192,9 @@ function answerIntro(faq) {
 
 function render() {
   const results = searchFaqs(state.query);
-  if (!state.selected && results.length) state.selected = results[0];
+  if (!results.some((faq) => String(faq.id) === String(state.selected?.id))) {
+    state.selected = results[0] || null;
+  }
 
   document.querySelector("#app").innerHTML = `
     <main class="shell">
@@ -256,10 +295,11 @@ function renderAgentAnswer(faq) {
   return `
     <div class="match-meta">
       <span>${escapeHtml(faq.category)}</span>
-      <span>${confidence(faq.score)}</span>
+      <span>${faq.curated ? "Product guide" : confidence(faq.score)}</span>
     </div>
     <h2>${escapeHtml(faq.question)}</h2>
     <p class="answer-text">${escapeHtml(answerIntro(faq))}</p>
+    ${renderResources(faq)}
     <div class="support-actions">
       <button class="ghost-button" type="button" data-query="${escapeHtml(faq.question)}">Ask this again</button>
       <button class="ghost-button" type="button" data-category="${escapeHtml(faq.category)}">View ${escapeHtml(faq.category)}</button>
@@ -272,11 +312,22 @@ function renderResult(faq) {
     <article class="result-card ${state.selected?.id === faq.id ? "selected" : ""}" data-id="${faq.id}">
       <div class="result-topline">
         <span>${escapeHtml(faq.category)}</span>
-        <b>${confidence(faq.score)}</b>
+        <b>${faq.curated ? "Product guide" : confidence(faq.score)}</b>
       </div>
       <h3>${escapeHtml(faq.question)}</h3>
       <p>${escapeHtml(formatAnswer(faq.answer))}</p>
     </article>
+  `;
+}
+
+function renderResources(faq) {
+  if (!faq.resources?.length) return "";
+  return `
+    <div class="resource-links">
+      ${faq.resources.slice(0, 4).map((resource) => `
+        <a href="${escapeHtml(resource.url)}" target="_blank" rel="noreferrer">${escapeHtml(resource.title)}</a>
+      `).join("")}
+    </div>
   `;
 }
 
@@ -321,7 +372,7 @@ function attachEvents() {
 
   document.querySelectorAll(".result-card").forEach((card) => {
     card.addEventListener("click", () => {
-      state.selected = faqVectors.find((faq) => faq.id === Number(card.dataset.id));
+      state.selected = faqVectors.find((faq) => String(faq.id) === card.dataset.id);
       state.isThinking = false;
       render();
     });
