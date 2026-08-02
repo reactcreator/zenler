@@ -1,6 +1,7 @@
 import { faqs as sourceFaqs } from "./data/faqs.js";
 import { productKnowledge } from "./data/productKnowledge.js";
 import { sitemapResources } from "./data/sitemapResources.js";
+import { youtubeResources } from "./data/youtubeResources.js";
 import "./styles.css";
 
 const offTopicTerms = [
@@ -716,13 +717,13 @@ function getResourcesForFaq(faq) {
 function getSitemapResourcesForFaq(faq) {
   const text = `${faq.category} ${faq.question} ${faq.answer}`;
   return [
-    bestSitemapResource("blog", text),
-    bestSitemapResource("tutorial", text)
+    bestIndexedResource(sitemapResources.blog || [], text),
+    bestIndexedResource(sitemapResources.tutorial || [], text),
+    bestIndexedResource(youtubeResources, text)
   ].filter(Boolean);
 }
 
-function bestSitemapResource(type, text) {
-  const source = sitemapResources[type] || [];
+function bestIndexedResource(source, text) {
   const queryTokens = new Set(tokenize(text));
   const lowerText = text.toLowerCase();
 
@@ -731,7 +732,7 @@ function bestSitemapResource(type, text) {
       const url = safeResourceUrl(resource.url);
       if (!url) return null;
       const urlText = new URL(url).pathname.replace(/[/_-]+/g, " ");
-      const resourceText = `${resource.title} ${urlText}`;
+      const resourceText = `${resource.title} ${resource.description || ""} ${resource.category || ""} ${urlText}`;
       const resourceTokens = tokenize(resourceText);
       const overlap = resourceTokens.reduce((score, token) => score + (queryTokens.has(token) ? 1 : 0), 0);
       const titlePhrase = resource.title.toLowerCase().replace(/[^a-z0-9\s-]/g, " ").replace(/\s+/g, " ").trim();
@@ -749,14 +750,26 @@ function bestSitemapResource(type, text) {
 }
 
 function prioritizeVisibleResources(resources, limit) {
-  const visible = resources.slice(0, limit);
-  const hasBlog = visible.some((resource) => resourceClassForUrl(resource.url) === "resource-blog");
-  if (hasBlog) return visible;
+  const preferredClasses = ["resource-blog", "resource-youtube", "resource-tutorial"];
+  const preferredResources = preferredClasses
+    .map((resourceClass) => resources.find((resource) => resourceClassForUrl(resource.url) === resourceClass))
+    .filter(Boolean);
+  const preferredUrls = new Set(preferredResources.map((resource) => safeResourceUrl(resource.url)));
+  const remainingResources = resources.filter((resource) => !preferredUrls.has(safeResourceUrl(resource.url)));
+  const selected = [
+    ...remainingResources.slice(0, Math.max(limit - preferredResources.length, 0)),
+    ...preferredResources
+  ];
+  const seen = new Set();
 
-  const blogResource = resources.find((resource) => resourceClassForUrl(resource.url) === "resource-blog");
-  if (!blogResource) return visible;
-
-  return [...visible.slice(0, Math.max(limit - 1, 0)), blogResource];
+  return selected
+    .filter((resource) => {
+      const url = safeResourceUrl(resource.url);
+      if (!url || seen.has(url)) return false;
+      seen.add(url);
+      return true;
+    })
+    .slice(0, limit);
 }
 
 function resourceClassForUrl(value) {
