@@ -684,10 +684,10 @@ function renderResources(faq) {
   return `
     <div class="resource-links">
       <p>Useful resources</p>
-      ${resources.slice(0, 6).map((resource) => {
+      ${resources.map((resource) => {
         const url = safeResourceUrl(resource.url);
         if (!url) return "";
-        return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(resource.title)}</a>`;
+        return `<a class="resource-link ${resourceClassForUrl(url)}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(resource.title)}</a>`;
       }).join("")}
     </div>
   `;
@@ -700,13 +700,39 @@ function getResourcesForFaq(faq) {
     .flatMap((group) => group.resources);
   const seen = new Set();
 
-  return [...(faq.resources || []), ...suggested, ...defaultResources]
+  const resources = [...(faq.resources || []), ...suggested, ...defaultResources]
     .filter((resource) => {
       const url = safeResourceUrl(resource.url);
       if (!url || seen.has(url)) return false;
       seen.add(url);
       return true;
     });
+
+  return prioritizeVisibleResources(resources, 6);
+}
+
+function prioritizeVisibleResources(resources, limit) {
+  const visible = resources.slice(0, limit);
+  const hasBlog = visible.some((resource) => resourceClassForUrl(resource.url) === "resource-blog");
+  if (hasBlog) return visible;
+
+  const blogResource = resources.find((resource) => resourceClassForUrl(resource.url) === "resource-blog");
+  if (!blogResource) return visible;
+
+  return [...visible.slice(0, Math.max(limit - 1, 0)), blogResource];
+}
+
+function resourceClassForUrl(value) {
+  const url = safeResourceUrl(value);
+  if (!url) return "resource-default";
+  const { hostname, pathname } = new URL(url);
+  if (hostname.includes("youtube.com") || hostname.includes("youtu.be")) return "resource-youtube";
+  if (hostname === "tutorials.newzenler.com") return "resource-tutorial";
+  if (hostname === "support.newzenler.com") return "resource-support";
+  if (hostname === "www.newzenler.com" && pathname.startsWith("/blog")) return "resource-blog";
+  if (hostname === "blog.newzenler.com") return "resource-blog";
+  if (hostname.endsWith("newzenler.com")) return "resource-zenler-site";
+  return "resource-default";
 }
 
 function safeResourceUrl(value) {
