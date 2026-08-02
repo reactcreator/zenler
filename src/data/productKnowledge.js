@@ -73,6 +73,19 @@ export const productKnowledge = [
     ]
   },
   {
+    id: "product-zenler-live-zoom",
+    category: "Live Classes",
+    question: "Does Zenler have Zoom?",
+    answer:
+      "Yes. Zenler includes built-in live-session hosting through Zenler Live for live classes, live webinars, interactive webinars, live streams and one-to-one bookings. You can create sessions from inside Zenler, manage registrations, connect them to courses and emails, and use cloud recording or replays where your live-session settings support it. For most creators this means you can run live teaching directly from Zenler without buying a separate live-session subscription.",
+    keywords: ["zoom", "zenler zoom", "built in zoom", "does zenler have zoom", "live session hosting", "cloud recording", "live classes", "webinars"],
+    resources: [
+      { title: "Live support collection", url: "https://support.newzenler.com/en/collections/3591863-live" },
+      { title: "Zenler Lives complete guide", url: "https://www.newzenler.com/blog/zenler-lives-complete-guide-webinars-one-to-one-bookings-recurring-sessions-zoom-integration" },
+      { title: "Zenler Virtual Classroom Software", url: "https://www.newzenler.com/features/virtual-classroom-software" }
+    ]
+  },
+  {
     id: "product-email-automations",
     category: "Automations",
     question: "What email and automation tools does Zenler include?",

@@ -88,6 +88,18 @@ const quickQuestions = [
   "Can I create memberships in Zenler?"
 ];
 
+const relatedGuideIds = {
+  "product-marketing-tools": ["product-funnels", "product-email-automations", "product-blog-seo", "product-communities", "product-lives"],
+  "product-lives": ["product-zenler-live-zoom", "product-communities", "product-email-automations"],
+  "product-zenler-live-zoom": ["product-lives"],
+  "product-memberships": ["product-communities", "product-email-automations", "product-monetisation"],
+  "product-funnels": ["product-marketing-tools", "product-email-automations", "product-blog-seo"],
+  "product-blog-seo": ["product-marketing-tools", "product-funnels", "product-email-automations"],
+  "product-communities": ["product-memberships", "product-lives", "product-email-automations"],
+  "product-email-automations": ["product-marketing-tools", "product-funnels", "product-memberships"],
+  "product-monetisation": ["product-memberships", "product-funnels", "product-email-automations"]
+};
+
 const tokenize = (value) =>
   value
     .toLowerCase()
@@ -139,15 +151,15 @@ function productGuideBoost(faq, queryTokens, query) {
   }).length;
   const broadCapabilityQuestion = /\b(what|which|have|include|tools|features|platform|all-in-one|can zenler|does zenler)\b/i.test(query);
   const marketingIntent = /\b(marketing|promote|sell|lead|sales|funnel|audience|grow)\b/i.test(query);
-  const generalProductQuestion = broadCapabilityQuestion && /\b(tools|features|platform|all-in-one|include|have)\b/i.test(query);
+  const asksForGeneralToolset = /\b(marketing tools|tools|features|platform|all-in-one|toolkit|what can|what does zenler do)\b/i.test(query);
 
-  if (!keywordMatches && !generalProductQuestion) return 0.18;
+  if (!keywordMatches && !asksForGeneralToolset) return 0.12;
 
   let boost = 0.9;
   if (keywordMatches) boost += Math.min(keywordMatches, 5) * 0.55;
   if (broadCapabilityQuestion && keywordMatches) boost += 0.8;
   if (marketingIntent && faq.id === "product-marketing-tools") boost += 2.2;
-  if (generalProductQuestion && faq.id === "product-marketing-tools") boost += 1.2;
+  if (asksForGeneralToolset && faq.id === "product-marketing-tools") boost += 1.2;
   return boost;
 }
 
@@ -332,8 +344,25 @@ function renderAgentAnswer(faq, results = []) {
 }
 
 function renderRelatedQuickAnswers(faq, results) {
-  const related = results
+  const preferredIds = relatedGuideIds[faq.id] || [];
+  const preferred = preferredIds
+    .map((id) => faqVectors.find((item) => String(item.id) === String(id)))
+    .filter(Boolean);
+  const sameCategory = results
     .filter((item) => String(item.id) !== String(faq.id))
+    .filter((item) => item.category === faq.category)
+    .filter((item) => !faq.curated || item.curated);
+  const fallback = faq.curated || preferredIds.length
+    ? []
+    : results.filter((item) => String(item.id) !== String(faq.id));
+  const seen = new Set([String(faq.id)]);
+  const related = [...preferred, ...sameCategory, ...fallback]
+    .filter((item) => {
+      const id = String(item.id);
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    })
     .slice(0, 3);
 
   if (!related.length) return "";
