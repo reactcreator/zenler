@@ -135,10 +135,14 @@ const stopWords = new Set([
 const state = {
   activeCategory: "All",
   query: "",
+  draftQuery: "",
   selected: null,
   isThinking: false,
+  isListening: false,
   resultLimit: 9
 };
+
+let speechRecognition = null;
 
 const categories = ["All", ...Array.from(new Set(faqs.map((faq) => faq.category)))];
 const quickQuestions = [
@@ -161,7 +165,8 @@ const relatedGuideIds = {
   "product-email-automations": ["product-marketing-tools", "product-funnels", "product-memberships"],
   "product-quizzes-surveys": ["product-drip-courses", "product-email-automations"],
   "product-monetisation": ["product-memberships", "product-funnels", "product-email-automations"],
-  "product-pricing-plans": ["product-monetisation", "product-marketing-tools", "product-lives"]
+  "product-pricing-plans": ["product-monetisation", "product-marketing-tools", "product-lives"],
+  "product-resources": ["product-drip-courses", "product-marketing-tools", "product-lives"]
 };
 
 const knownFeatureAliases = [
@@ -173,12 +178,14 @@ const knownFeatureAliases = [
   "payment", "payments", "coupon", "coupons", "affiliate", "analytics", "mobile app",
   "download", "downloads", "quiz", "quizzes", "survey", "surveys", "certificate", "certificates",
   "booking", "bookings", "coaching", "drip", "pricing", "price", "prices", "plan", "plans",
-  "starter", "pro", "premium", "subscription", "bundle", "bundles"
+  "starter", "pro", "premium", "subscription", "bundle", "bundles", "learn", "training",
+  "tutorial", "tutorials", "quick start", "complete guide", "accelerator"
 ];
 
 const productIntentRoutes = [
   { id: "product-pricing-plans", pattern: /\b(pricing|price|prices|plans|starter|pro|premium|cost|allowances|limits|transaction fees)\b/i },
   { id: "product-zenler-live-zoom", pattern: /\b(zoom|built[-\s]?in zoom|enterprise[-\s]?level zoom|no zoom subscription|121|one[-\s]?to[-\s]?one|charge for live|charge for zoom)\b/i },
+  { id: "product-resources", pattern: /\b(learn zenler|learning zenler|training|tutorial|tutorials|quick start|complete guide|accelerator|60[-\s]?day|where should i start|how do i learn|how can i learn|learn the platform)\b/i },
   { id: "product-marketing-tools", pattern: /\b(marketing tools|marketing toolkit|promote|promotion tools)\b/i },
   { id: "product-drip-courses", pattern: /\b(drip|scheduled content|release content)\b/i },
   { id: "product-communities", pattern: /\b(community|communities|discussion|discussions)\b/i },
@@ -326,9 +333,10 @@ function isProductGuideQuestion(query, routeId) {
   const explicitMarketing = routeId === "product-marketing-tools" && /\b(marketing tools|marketing toolkit|what marketing)\b/.test(text);
   const explicitZoom = routeId === "product-zenler-live-zoom" && /\b(zoom|one to one|121|charge for live|charge for zoom|enterprise level)\b/.test(text);
   const explicitQuiz = routeId === "product-quizzes-surveys" && /\b(quiz|quizzes|survey|surveys)\b/.test(text);
+  const explicitLearning = routeId === "product-resources" && /\b(learn|training|tutorial|tutorials|quick start|complete guide|accelerator|60 day|where should i start)\b/.test(text);
 
   return asksIfZenlerHasFeature || asksWhatZenlerHas || asksHowFeatureWorks || asksSubscription
-    || explicitPricing || explicitMarketing || explicitZoom || explicitQuiz;
+    || explicitPricing || explicitMarketing || explicitZoom || explicitQuiz || explicitLearning;
 }
 
 function isUnknownFeatureQuery(query) {
@@ -405,7 +413,10 @@ function render() {
             <h1 class="zen-hero-title">ALL-IN-ONE ONLINE COURSE PLATFORM TO CREATE, SELL AND GROW</h1>
             <form class="ask-form">
               <label class="sr-only" for="questionInput">Ask a Zenler question</label>
-              <textarea id="questionInput" placeholder="Ask about courses, memberships, domains, payments, webinars, analytics..." rows="4">${escapeHtml(state.query)}</textarea>
+              <textarea id="questionInput" placeholder="Ask about courses, memberships, domains, payments, webinars, analytics..." rows="4">${escapeHtml(state.draftQuery)}</textarea>
+              <button class="voice-button" type="button" data-voice-input aria-label="Voice type question" title="Voice type question" aria-pressed="${state.isListening ? "true" : "false"}">
+                <span>${state.isListening ? "Stop" : "Mic"}</span>
+              </button>
               <button class="ask-button" type="submit">
                 <span>Ask</span>
                 <span class="button-spark"></span>
@@ -604,13 +615,10 @@ function attachEvents() {
   });
 
   document.querySelector("#questionInput").addEventListener("input", (event) => {
-    state.query = event.target.value;
-    state.resultLimit = 9;
-    state.selected = searchFaqs(state.query)[0] || null;
-    render();
-    document.querySelector("#questionInput").focus();
-    document.querySelector("#questionInput").setSelectionRange(state.query.length, state.query.length);
+    state.draftQuery = event.target.value;
   });
+
+  document.querySelector("[data-voice-input]")?.addEventListener("click", toggleVoiceInput);
 
   document.querySelectorAll("[data-query]").forEach((button) => {
     button.addEventListener("click", () => askQuestion(button.dataset.query));
@@ -651,6 +659,7 @@ function attachEvents() {
 
 function askQuestion(query) {
   state.query = query;
+  state.draftQuery = query;
   state.isThinking = true;
   state.selected = null;
   state.resultLimit = 9;
@@ -662,6 +671,63 @@ function askQuestion(query) {
     state.isThinking = false;
     render();
   }, 850);
+}
+
+function toggleVoiceInput() {
+  if (state.isListening) {
+    speechRecognition?.stop();
+    return;
+  }
+
+  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Recognition) {
+    window.alert("Voice typing is not available in this browser. You can still type your question and click Ask.");
+    return;
+  }
+
+  speechRecognition = new Recognition();
+  speechRecognition.continuous = false;
+  speechRecognition.interimResults = true;
+  speechRecognition.lang = "en-GB";
+  let finalTranscript = state.draftQuery.trim();
+
+  speechRecognition.onresult = (event) => {
+    let interimTranscript = "";
+    for (let index = event.resultIndex; index < event.results.length; index += 1) {
+      const transcript = event.results[index][0].transcript.trim();
+      if (event.results[index].isFinal) {
+        finalTranscript = [finalTranscript, transcript].filter(Boolean).join(" ").trim();
+      } else {
+        interimTranscript = transcript;
+      }
+    }
+
+    state.draftQuery = [finalTranscript, interimTranscript].filter(Boolean).join(" ").trim();
+    const input = document.querySelector("#questionInput");
+    if (input) {
+      input.value = state.draftQuery;
+      input.focus();
+    }
+  };
+
+  speechRecognition.onerror = () => {
+    state.isListening = false;
+    render();
+  };
+
+  speechRecognition.onend = () => {
+    state.isListening = false;
+    render();
+  };
+
+  state.isListening = true;
+  render();
+  try {
+    speechRecognition.start();
+  } catch (error) {
+    state.isListening = false;
+    render();
+  }
 }
 
 function loadMoreResults() {

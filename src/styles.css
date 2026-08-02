@@ -149,7 +149,7 @@ p {
 
 .ask-form {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) 74px auto;
   gap: 12px;
   align-items: stretch;
 }
@@ -181,6 +181,22 @@ textarea:focus {
   color: white;
   font-weight: 900;
   overflow: hidden;
+}
+
+.voice-button {
+  min-width: 74px;
+  border: 1px solid rgba(81, 49, 237, 0.24);
+  background: #ffffff;
+  color: var(--violet);
+  font-weight: 900;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.voice-button:hover,
+.voice-button[aria-pressed="true"] {
+  border-color: rgba(81, 49, 237, 0.56);
+  background: #f4f1fc;
+  box-shadow: 0 0 0 5px rgba(81, 49, 237, 0.1);
 }
 
 .ask-button span:first-child {

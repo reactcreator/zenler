@@ -167,11 +167,12 @@ export const productKnowledge = [
     category: "Resources",
     question: "Where should I learn more about Zenler features?",
     answer:
-      "For learning Zenler, start with the Quick Start Guide if you are new, then use The Complete Guide to Zenler as the searchable platform library. For strategy and deeper topics, use the Zenler Blog, official support collections and structured tutorial courses. The app avoids raw transcript answers and uses refined FAQ, product and support resources for courses, memberships, funnels, blogs, communities, coaching, live sessions, email marketing, automations and analytics.",
-    keywords: ["resources", "learn", "tutorial", "guide", "training", "support", "documentation", "help", "where should i start"],
+      "For learning Zenler, start on the Zenler tutorial site. If you are new, use the Quick Start Guide first because it is designed to get you moving quickly with your site and first course. Then use The Complete Guide to Zenler as the broader searchable platform library. If the question is about training, tutorials, onboarding or where to learn Zenler, the tutorial site is the best next step. Zenler also promotes a 60-Day Accelerator Program for new users and paid-plan onboarding, giving structured help to launch a course, generate leads and build momentum. Availability and access can change, so check the current signup or tutorial-site page for the latest terms.",
+    keywords: ["resources", "learn", "learning zenler", "tutorial", "tutorials", "tutorial site", "guide", "training", "support", "documentation", "help", "where should i start", "quick start", "complete guide", "accelerator", "60 day accelerator", "60-day accelerator", "onboarding"],
     resources: [
       { title: "Quick Start Guide", url: "https://tutorials.newzenler.com/courses/zenler-quick-start-guide-for-beginners" },
       { title: "The Complete Guide to Zenler", url: "https://tutorials.newzenler.com/courses/the-complete-guide-to-zenler" },
+      { title: "60-Day Accelerator Program", url: "https://tutorials.newzenler.com/f/free-user-get-started-quick-with-us" },
       { title: "Zenler support center", url: "https://support.newzenler.com/en/" },
       { title: "Zenler Blog", url: "https://www.newzenler.com/blog" }
     ]
