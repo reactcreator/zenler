@@ -14,10 +14,39 @@ const zenlerTerms = [
   "certificate", "domain", "blog", "analytics", "mobile app", "download", "quiz", "survey"
 ];
 
+const timestampPattern = /\b\d{1,2}:\d{2}(?::\d{2})?\b/g;
+const emojiPattern = /[\p{Extended_Pictographic}\uFE0F]/gu;
+const transcriptNoisePattern = /^use the relevant zenler settings for this workflow\.?\s*/i;
+
 function removeSources(value) {
   return value
     .replace(/\sSource:\shttps?:\/\/\S+/g, "")
     .replace(/\shttps?:\/\/\S+/g, "")
+    .trim();
+}
+
+function cleanDisplayText(value) {
+  return removeSources(value)
+    .replace(emojiPattern, "")
+    .replace(/^[-\s:|]*(?:\d+\.)?\s*/, "")
+    .replace(new RegExp(`^\\s*${timestampPattern.source}\\s*[-–—:]?\\s*`, "i"), "")
+    .replace(timestampPattern, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function cleanQuestion(value) {
+  return cleanDisplayText(value)
+    .replace(/^question\s*[-:]?\s*/i, "")
+    .replace(/\s+\?/g, "?")
+    .trim();
+}
+
+function cleanAnswer(value) {
+  return cleanDisplayText(value)
+    .replace(transcriptNoisePattern, "")
+    .replace(/\s+\?/g, "?")
+    .replace(/\s+([,.!?])/g, "$1")
     .trim();
 }
 
@@ -26,11 +55,13 @@ function isZenlerFaq(faq) {
   const question = faq.question.toLowerCase();
   const hasZenlerSignal = zenlerTerms.some((term) => text.includes(term));
   const isClearlyOffTopic = offTopicTerms.some((term) => question.includes(term) || text.includes(term));
-  return hasZenlerSignal && !isClearlyOffTopic;
+  const cleanedAnswer = cleanAnswer(faq.answer);
+  const isNoisyTranscript = transcriptNoisePattern.test(faq.answer) && cleanedAnswer.length < 140;
+  return hasZenlerSignal && !isClearlyOffTopic && !isNoisyTranscript && cleanedAnswer.length > 35;
 }
 
 function zenlerizeAnswer(answer) {
-  return removeSources(answer)
+  return cleanAnswer(answer)
     .replace(/\bZenler Zoom\b/g, "Zenler Live")
     .replace(/\bZoom cloud recordings\b/gi, "Zenler live-session cloud recordings")
     .replace(/\bpersonal Zoom account\b/gi, "connected live-session account")
@@ -46,7 +77,7 @@ function zenlerizeAnswer(answer) {
 }
 
 function zenlerizeQuestion(question) {
-  return question
+  return cleanQuestion(question)
     .replace(/\bZenler Zoom\b/g, "Zenler Live")
     .replace(/\bZoom\b/g, "Zenler Live")
     .replace(/\bNotebook\s*LM\b/gi, "Zenler");
@@ -90,6 +121,7 @@ const quickQuestions = [
 
 const relatedGuideIds = {
   "product-marketing-tools": ["product-funnels", "product-email-automations", "product-blog-seo", "product-communities", "product-lives"],
+  "product-drip-courses": ["product-memberships", "product-email-automations"],
   "product-lives": ["product-zenler-live-zoom", "product-communities", "product-email-automations"],
   "product-zenler-live-zoom": ["product-lives"],
   "product-memberships": ["product-communities", "product-email-automations", "product-monetisation"],
@@ -99,6 +131,30 @@ const relatedGuideIds = {
   "product-email-automations": ["product-marketing-tools", "product-funnels", "product-memberships"],
   "product-monetisation": ["product-memberships", "product-funnels", "product-email-automations"]
 };
+
+const knownFeatureAliases = [
+  "marketing", "marketing tools", "tools", "features",
+  "zoom", "zenler live", "live", "webinar", "webinars", "live class", "live classes",
+  "course", "courses", "membership", "memberships", "community", "communities",
+  "funnel", "funnels", "marketing funnel", "email", "emails", "broadcast", "broadcasts",
+  "automation", "automations", "blog", "blogs", "seo", "domain", "custom domain",
+  "payment", "payments", "coupon", "coupons", "affiliate", "analytics", "mobile app",
+  "download", "downloads", "quiz", "quizzes", "survey", "surveys", "certificate", "certificates",
+  "booking", "bookings", "coaching", "drip", "pricing", "subscription", "bundle", "bundles"
+];
+
+const productIntentRoutes = [
+  { id: "product-marketing-tools", pattern: /\b(marketing tools|marketing toolkit|promote|promotion tools)\b/i },
+  { id: "product-zenler-live-zoom", pattern: /\b(zoom|built[-\s]?in zoom)\b/i },
+  { id: "product-drip-courses", pattern: /\b(drip|scheduled content|release content)\b/i },
+  { id: "product-communities", pattern: /\b(community|communities|discussion|discussions)\b/i },
+  { id: "product-memberships", pattern: /\b(membership|memberships|member-only|member only)\b/i },
+  { id: "product-funnels", pattern: /\b(funnel|funnels|landing page|opt[-\s]?in|lead magnet)\b/i },
+  { id: "product-blog-seo", pattern: /\b(blog|blogs|blogging|seo|sitemap|search)\b/i },
+  { id: "product-email-automations", pattern: /\b(email|emails|broadcast|broadcasts|newsletter|automation|automations|sequence|tagging|tags)\b/i },
+  { id: "product-lives", pattern: /\b(live class|live classes|webinar|webinars|interactive webinar|live stream|booking|bookings|coaching call)\b/i },
+  { id: "product-monetisation", pattern: /\b(payment|payments|checkout|coupon|coupons|pricing|subscription|sell|selling|monetise|monetize)\b/i }
+];
 
 const tokenize = (value) =>
   value
@@ -131,7 +187,11 @@ function scoreFaq(faq, query) {
   if (!queryTokens.length) return 0;
 
   const tokenSet = new Set(faq.tokens);
-  const exactPhrase = `${faq.question} ${faq.answer}`.toLowerCase().includes(query.toLowerCase().trim()) ? 8 : 0;
+  const cleanQuery = query.toLowerCase().trim();
+  const questionText = faq.question.toLowerCase();
+  const combinedText = `${faq.question} ${faq.answer}`.toLowerCase();
+  const exactQuestion = questionText === cleanQuery ? 32 : 0;
+  const exactPhrase = combinedText.includes(cleanQuery) ? 10 : 0;
   const overlap = queryTokens.reduce((score, token) => score + (tokenSet.has(token) ? 3 : 0), 0);
   const partial = queryTokens.reduce((score, token) => {
     const found = faq.tokens.some((candidate) => candidate.includes(token) || token.includes(candidate));
@@ -139,12 +199,17 @@ function scoreFaq(faq, query) {
   }, 0);
   const categoryBoost = state.activeCategory === "All" || state.activeCategory === faq.category ? 1.15 : 0.74;
   const curatedBoost = faq.curated ? productGuideBoost(faq, queryTokens, query) : 1;
+  const coverage = queryTokens.filter((token) => tokenSet.has(token)).length / Math.max(queryTokens.length, 1);
+  const coverageBoost = coverage >= 0.8 ? 1.25 : coverage >= 0.5 ? 1 : 0.62;
 
-  return (exactPhrase + overlap + partial) * categoryBoost * curatedBoost;
+  return (exactQuestion + exactPhrase + overlap + partial) * categoryBoost * curatedBoost * coverageBoost;
 }
 
 function productGuideBoost(faq, queryTokens, query) {
   const queryText = query.toLowerCase();
+  const routedIntent = productIntentRoutes.find((route) => route.pattern.test(query));
+  if (routedIntent && faq.id !== routedIntent.id) return 0.08;
+
   const keywordMatches = (faq.keywords || []).filter((keyword) => {
     const keywordText = keyword.toLowerCase();
     return queryText.includes(keywordText) || keywordText.split(/\s+/).some((part) => queryTokens.includes(part));
@@ -156,6 +221,7 @@ function productGuideBoost(faq, queryTokens, query) {
   if (!keywordMatches && !asksForGeneralToolset) return 0.12;
 
   let boost = 0.9;
+  if (routedIntent?.id === faq.id) boost += 5.5;
   if (keywordMatches) boost += Math.min(keywordMatches, 5) * 0.55;
   if (broadCapabilityQuestion && keywordMatches) boost += 0.8;
   if (marketingIntent && faq.id === "product-marketing-tools") boost += 2.2;
@@ -165,6 +231,7 @@ function productGuideBoost(faq, queryTokens, query) {
 
 function getAllMatches(query) {
   if (isOffPlatformQuery(query)) return [];
+  if (isUnknownFeatureQuery(query)) return [];
 
   const scoped = state.activeCategory === "All"
     ? faqVectors
@@ -174,8 +241,22 @@ function getAllMatches(query) {
 
   return scoped
     .map((faq) => ({ ...faq, score: scoreFaq(faq, query) }))
-    .filter((faq) => faq.score > 0)
+    .filter((faq) => faq.score >= minimumScoreForQuery(query, faq))
     .sort((a, b) => b.score - a.score);
+}
+
+function isUnknownFeatureQuery(query) {
+  const text = query.toLowerCase().replace(/[^\w\s-]/g, " ").replace(/\s+/g, " ").trim();
+  const featureQuestion = /\b(does|do|can)\s+zenler\s+(have|include|support|do|run|offer)\b/.test(text);
+  if (!featureQuestion) return false;
+  return !knownFeatureAliases.some((alias) => text.includes(alias));
+}
+
+function minimumScoreForQuery(query, faq) {
+  const tokens = tokenize(query);
+  if (!tokens.length) return 0;
+  if (faq.curated) return 8;
+  return tokens.length <= 2 ? 7 : 10;
 }
 
 function searchFaqs(query) {
@@ -200,15 +281,10 @@ function formatAnswer(answer) {
 
 function answerIntro(faq) {
   if (faq.curated) {
-    return `Zenler product guidance: ${formatAnswer(faq.answer)}`;
+    return formatAnswer(faq.answer);
   }
 
-  const starts = [
-    "I found the closest Zenler FAQ match.",
-    "Here is the most relevant support answer.",
-    "This looks like the right Zenler guidance."
-  ];
-  return `${starts[faq.id % starts.length]} ${formatAnswer(faq.answer)}`;
+  return formatAnswer(faq.answer);
 }
 
 function render() {
@@ -310,7 +386,7 @@ function renderAgentAnswer(faq, results = []) {
         ? "I can help with Zenler product and support questions. Try asking about Zenler courses, memberships, live sessions, funnels, email, communities, payments, domains, blogs or analytics."
         : isInitial
           ? "Type a Zenler question on the left and I will search the FAQ bank, product knowledge vault, support resources and tutorial links to give you the best support-ready answer. You can ask about courses, memberships, marketing funnels, blogs, communities, live sessions, email, automations, payments, domains, analytics and more."
-          : "Ask a Zenler product question to search the FAQ bank."}</p>
+          : "I do not have a strong enough Zenler FAQ match for that wording. Try asking it more specifically, for example with the feature name, page area, or workflow you are using."}</p>
     `;
   }
 
@@ -332,7 +408,9 @@ function renderAgentAnswer(faq, results = []) {
       <span>${escapeHtml(faq.category)}</span>
       <span>${faq.curated ? "Product guide" : confidence(faq.score)}</span>
     </div>
+    <p class="qa-label">Question</p>
     <h2>${escapeHtml(faq.question)}</h2>
+    <p class="qa-label">Answer</p>
     <p class="answer-text">${escapeHtml(answerIntro(faq))}</p>
     ${renderResources(faq)}
     ${renderRelatedQuickAnswers(faq, results)}

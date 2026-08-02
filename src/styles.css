@@ -294,8 +294,16 @@ textarea:focus {
   font-size: 0.88rem;
 }
 
+.qa-label {
+  margin: 18px 0 7px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
 .answer-card h2 {
-  margin: 16px 0 14px;
+  margin: 0 0 14px;
   font-size: clamp(1.55rem, 3vw, 2.5rem);
   line-height: 1.04;
 }

@@ -59,6 +59,18 @@ export const productKnowledge = [
     ]
   },
   {
+    id: "product-drip-courses",
+    category: "Online Courses",
+    question: "Can Zenler drip course content?",
+    answer:
+      "Yes. Zenler supports drip schedules for courses so you can release sections or lessons over time instead of giving students access to everything at once. Drip is useful for cohorts, guided programmes, memberships and learning paths where you want students to move through content at a controlled pace. You can combine drip with lesson completion, email notifications, automations and certificates to create a structured student journey.",
+    keywords: ["drip", "drip course", "drip content", "course drip", "release content", "scheduled content", "cohort"],
+    resources: [
+      { title: "Courses support collection", url: "https://support.newzenler.com/en/collections/4027752-courses" },
+      { title: "The Complete Guide to Zenler", url: "https://tutorials.newzenler.com/courses/the-complete-guide-to-zenler" }
+    ]
+  },
+  {
     id: "product-lives",
     category: "Live Classes",
     question: "What live tools are built into Zenler?",
