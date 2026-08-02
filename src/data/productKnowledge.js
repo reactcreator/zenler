@@ -89,12 +89,13 @@ export const productKnowledge = [
     category: "Live Classes",
     question: "Does Zenler have Zoom?",
     answer:
-      "Yes. Zenler includes built-in live-session hosting through Zenler Live for live classes, live webinars, interactive webinars, live streams and one-to-one bookings. You can create sessions from inside Zenler, manage registrations, connect them to courses and emails, and use cloud recording or replays where your live-session settings support it. For most creators this means you can run live teaching directly from Zenler without buying a separate live-session subscription.",
-    keywords: ["zoom", "zenler zoom", "built in zoom", "does zenler have zoom", "live session hosting", "cloud recording", "live classes", "webinars"],
+      "Yes. Zenler has Zoom built into the platform through Zenler Live, so most users do not need a separate Zoom subscription. Zenler uses an enterprise-level Zoom setup for live sessions, letting you run Live Webinars, Interactive Webinars, Live Classes, Live Streams and one-to-one bookings from inside Zenler. You can connect sessions to registrations, courses, emails, automations, replays and student records. You can also charge for live classes, interactive webinars and one-to-one sessions, which makes it especially useful for coaches, consultants, educators and businesses that run live events as part of their offer.",
+    keywords: ["zoom", "zenler zoom", "built in zoom", "does zenler have zoom", "live session hosting", "cloud recording", "enterprise zoom", "no zoom subscription", "live classes", "webinars", "interactive webinars", "121", "one to one", "one-to-one", "charge for live"],
     resources: [
       { title: "Live support collection", url: "https://support.newzenler.com/en/collections/3591863-live" },
       { title: "Zenler Lives complete guide", url: "https://www.newzenler.com/blog/zenler-lives-complete-guide-webinars-one-to-one-bookings-recurring-sessions-zoom-integration" },
-      { title: "Zenler Virtual Classroom Software", url: "https://www.newzenler.com/features/virtual-classroom-software" }
+      { title: "Zenler Virtual Classroom Software", url: "https://www.newzenler.com/features/virtual-classroom-software" },
+      { title: "Live Streaming Platform", url: "https://www.newzenler.com/features/live-streaming-platform" }
     ]
   },
   {
@@ -109,6 +110,18 @@ export const productKnowledge = [
       { title: "Zenler Email Marketing 2026", url: "https://www.newzenler.com/blog/zenler-email-marketing-2026" },
       { title: "Zenler Business Automations", url: "https://www.newzenler.com/features/automate-your-business" },
       { title: "3 Day Email Marketing Bootcamp", url: "https://tutorials.newzenler.com/courses/3-day-email-challenge" }
+    ]
+  },
+  {
+    id: "product-quizzes-surveys",
+    category: "Quizzes & Surveys",
+    question: "How do I create quizzes and surveys in Zenler?",
+    answer:
+      "Zenler includes quizzes and surveys that you can add to courses and learning workflows. Quizzes are useful for checking understanding, setting pass requirements and adding structure to a course. Surveys are useful for collecting feedback, segmenting learners or asking open questions. Start from the relevant course lesson or funnel/survey area, choose the quiz or survey content type, add your questions, configure scoring or required responses where needed, then test the learner experience before publishing.",
+    keywords: ["quiz", "quizzes", "survey", "surveys", "questions", "passing score", "assessment", "feedback"],
+    resources: [
+      { title: "Courses support collection", url: "https://support.newzenler.com/en/collections/4027752-courses" },
+      { title: "The Complete Guide to Zenler", url: "https://tutorials.newzenler.com/courses/the-complete-guide-to-zenler" }
     ]
   },
   {
@@ -135,6 +148,18 @@ export const productKnowledge = [
       { title: "Zenler Online Payments", url: "https://www.newzenler.com/features/sell-online" },
       { title: "Sell Digital Products With Zenler 2026", url: "https://www.newzenler.com/blog/sell-digital-products-with-zenler-2026" },
       { title: "Zenler Membership Site Software", url: "https://www.newzenler.com/features/membership-site-software" }
+    ]
+  },
+  {
+    id: "product-pricing-plans",
+    category: "Pricing",
+    question: "What pricing plans does Zenler offer?",
+    answer:
+      "Zenler pricing is plan-based and is designed around the number of sites, courses, communities, people, emails, marketing funnels, live sessions, admins and advanced features you need. The current public pricing page lists Starter, Pro and Premium. Annual public pricing currently shows Starter at $47/month, Pro at $97/month and Premium at $277/month when billed annually. The plan comparison includes no transaction fees, courses, communities, email allowances, marketing funnels, live sessions, coupons, quizzes and surveys, blogs and automations. Starter currently includes 1 site, 5 courses, 1 community, 500 people, 5,000 emails/month, 2 marketing funnels and 10 live sessions. Pro raises this to 3 sites, unlimited courses, 20 communities, unlimited people, 100,000 emails/month, 100 funnels and 100 live sessions. Premium raises this again to 10 sites, unlimited courses, unlimited communities, 500,000 emails/month, unlimited funnels and 300 live sessions. Always check the live Zenler pricing page before quoting exact prices or limits because plan names, promotional pricing and allowances can change.",
+    keywords: ["pricing", "price", "plans", "starter", "pro", "premium", "cost", "subscription", "allowances", "limits", "transaction fees"],
+    resources: [
+      { title: "Zenler Pricing", url: "https://www.newzenler.com/pricing" },
+      { title: "Zenler Features", url: "https://www.newzenler.com/features" }
     ]
   },
   {

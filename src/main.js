@@ -129,7 +129,9 @@ const relatedGuideIds = {
   "product-blog-seo": ["product-marketing-tools", "product-funnels", "product-email-automations"],
   "product-communities": ["product-memberships", "product-lives", "product-email-automations"],
   "product-email-automations": ["product-marketing-tools", "product-funnels", "product-memberships"],
-  "product-monetisation": ["product-memberships", "product-funnels", "product-email-automations"]
+  "product-quizzes-surveys": ["product-drip-courses", "product-email-automations"],
+  "product-monetisation": ["product-memberships", "product-funnels", "product-email-automations"],
+  "product-pricing-plans": ["product-monetisation", "product-marketing-tools", "product-lives"]
 };
 
 const knownFeatureAliases = [
@@ -140,21 +142,28 @@ const knownFeatureAliases = [
   "automation", "automations", "blog", "blogs", "seo", "domain", "custom domain",
   "payment", "payments", "coupon", "coupons", "affiliate", "analytics", "mobile app",
   "download", "downloads", "quiz", "quizzes", "survey", "surveys", "certificate", "certificates",
-  "booking", "bookings", "coaching", "drip", "pricing", "subscription", "bundle", "bundles"
+  "booking", "bookings", "coaching", "drip", "pricing", "price", "prices", "plan", "plans",
+  "starter", "pro", "premium", "subscription", "bundle", "bundles"
 ];
 
 const productIntentRoutes = [
+  { id: "product-pricing-plans", pattern: /\b(pricing|price|prices|plans|starter|pro|premium|cost|allowances|limits|transaction fees)\b/i },
+  { id: "product-zenler-live-zoom", pattern: /\b(zoom|built[-\s]?in zoom|enterprise[-\s]?level zoom|no zoom subscription|121|one[-\s]?to[-\s]?one|charge for live|charge for zoom)\b/i },
   { id: "product-marketing-tools", pattern: /\b(marketing tools|marketing toolkit|promote|promotion tools)\b/i },
-  { id: "product-zenler-live-zoom", pattern: /\b(zoom|built[-\s]?in zoom)\b/i },
   { id: "product-drip-courses", pattern: /\b(drip|scheduled content|release content)\b/i },
   { id: "product-communities", pattern: /\b(community|communities|discussion|discussions)\b/i },
   { id: "product-memberships", pattern: /\b(membership|memberships|member-only|member only)\b/i },
   { id: "product-funnels", pattern: /\b(funnel|funnels|landing page|opt[-\s]?in|lead magnet)\b/i },
   { id: "product-blog-seo", pattern: /\b(blog|blogs|blogging|seo|sitemap|search)\b/i },
   { id: "product-email-automations", pattern: /\b(email|emails|broadcast|broadcasts|newsletter|automation|automations|sequence|tagging|tags)\b/i },
+  { id: "product-quizzes-surveys", pattern: /\b(quiz|quizzes|survey|surveys|assessment|passing score)\b/i },
   { id: "product-lives", pattern: /\b(live class|live classes|webinar|webinars|interactive webinar|live stream|booking|bookings|coaching call)\b/i },
-  { id: "product-monetisation", pattern: /\b(payment|payments|checkout|coupon|coupons|pricing|subscription|sell|selling|monetise|monetize)\b/i }
+  { id: "product-monetisation", pattern: /\b(payment|payments|checkout|coupon|coupons|subscription|sell|selling|monetise|monetize)\b/i }
 ];
+
+function getProductIntent(query) {
+  return productIntentRoutes.find((route) => route.pattern.test(query));
+}
 
 const tokenize = (value) =>
   value
@@ -170,6 +179,8 @@ const faqVectors = faqs.map((faq) => {
   const keywordTokens = tokenize((faq.keywords || []).join(" "));
   return {
     ...faq,
+    questionTokens,
+    categoryTokens: tokenize(faq.category),
     tokens: [
       ...questionTokens,
       ...questionTokens,
@@ -187,12 +198,17 @@ function scoreFaq(faq, query) {
   if (!queryTokens.length) return 0;
 
   const tokenSet = new Set(faq.tokens);
+  const questionTokenSet = new Set(faq.questionTokens || []);
+  const categoryTokenSet = new Set(faq.categoryTokens || []);
   const cleanQuery = query.toLowerCase().trim();
   const questionText = faq.question.toLowerCase();
   const combinedText = `${faq.question} ${faq.answer}`.toLowerCase();
   const exactQuestion = questionText === cleanQuery ? 32 : 0;
   const exactPhrase = combinedText.includes(cleanQuery) ? 10 : 0;
   const overlap = queryTokens.reduce((score, token) => score + (tokenSet.has(token) ? 3 : 0), 0);
+  const questionOverlap = queryTokens.reduce((score, token) => score + (questionTokenSet.has(token) ? 1 : 0), 0);
+  const categoryOverlap = queryTokens.reduce((score, token) => score + (categoryTokenSet.has(token) ? 1 : 0), 0);
+  const titleCategoryBoost = 1 + Math.min(questionOverlap * 0.22 + categoryOverlap * 0.28, 1.1);
   const partial = queryTokens.reduce((score, token) => {
     const found = faq.tokens.some((candidate) => candidate.includes(token) || token.includes(candidate));
     return score + (found ? 0.8 : 0);
@@ -202,12 +218,16 @@ function scoreFaq(faq, query) {
   const coverage = queryTokens.filter((token) => tokenSet.has(token)).length / Math.max(queryTokens.length, 1);
   const coverageBoost = coverage >= 0.8 ? 1.25 : coverage >= 0.5 ? 1 : 0.62;
 
-  return (exactQuestion + exactPhrase + overlap + partial) * categoryBoost * curatedBoost * coverageBoost;
+  if (!faq.curated && queryTokens.length <= 3 && questionOverlap === 0 && categoryOverlap === 0) {
+    return 0;
+  }
+
+  return (exactQuestion + exactPhrase + overlap + partial) * categoryBoost * curatedBoost * coverageBoost * titleCategoryBoost;
 }
 
 function productGuideBoost(faq, queryTokens, query) {
   const queryText = query.toLowerCase();
-  const routedIntent = productIntentRoutes.find((route) => route.pattern.test(query));
+  const routedIntent = getProductIntent(query);
   if (routedIntent && faq.id !== routedIntent.id) return 0.08;
 
   const keywordMatches = (faq.keywords || []).filter((keyword) => {
@@ -232,6 +252,7 @@ function productGuideBoost(faq, queryTokens, query) {
 function getAllMatches(query) {
   if (isOffPlatformQuery(query)) return [];
   if (isUnknownFeatureQuery(query)) return [];
+  const routedIntent = getProductIntent(query);
 
   const scoped = state.activeCategory === "All"
     ? faqVectors
@@ -239,10 +260,45 @@ function getAllMatches(query) {
 
   if (!query.trim()) return scoped;
 
-  return scoped
+  const bankMatches = scoped
+    .filter((faq) => !faq.curated)
     .map((faq) => ({ ...faq, score: scoreFaq(faq, query) }))
     .filter((faq) => faq.score >= minimumScoreForQuery(query, faq))
     .sort((a, b) => b.score - a.score);
+
+  const productMatch = routedIntent
+    ? scoped
+      .filter((faq) => faq.curated && faq.id === routedIntent.id)
+      .map((faq) => ({ ...faq, score: Math.max(scoreFaq(faq, query), 64) }))
+      .filter((faq) => faq.score >= minimumScoreForQuery(query, faq))
+    : [];
+
+  if (productMatch.length && isProductGuideQuestion(query, routedIntent.id)) {
+    return [...productMatch, ...bankMatches];
+  }
+
+  // The refined FAQ bank is authoritative for specific support questions. Product
+  // guides handle broad feature intent and fill gaps when no strong FAQ exists.
+  if (bankMatches[0]?.score >= authoritativeFaqScore(query)) {
+    return bankMatches;
+  }
+
+  return [...productMatch, ...bankMatches].sort((a, b) => b.score - a.score);
+}
+
+function isProductGuideQuestion(query, routeId) {
+  const text = query.toLowerCase().replace(/[^\w\s-]/g, " ").replace(/\s+/g, " ").trim();
+  const asksIfZenlerHasFeature = /\b(does|do|can)\s+(?:i\s+)?zenler\s+(have|include|support|offer|run|do|create|make)\b/.test(text);
+  const asksWhatZenlerHas = /\bwhat\s+.*\b(zenler|tools|features|platform|plans|pricing|price)\b.*\b(have|include|offer|do|work|cost|are|is)?\b/.test(text);
+  const asksHowFeatureWorks = /\bhow\s+(?:do|does|can|would|should)\b.*\b(work|create|make|use|run|set up|setup|sell|charge)\b/.test(text);
+  const asksSubscription = /\b(do i need|need a|separate)\b.*\b(subscription|zoom)\b/.test(text);
+  const explicitPricing = routeId === "product-pricing-plans" && /\b(pricing|price|prices|plans|starter|pro|premium|cost)\b/.test(text);
+  const explicitMarketing = routeId === "product-marketing-tools" && /\b(marketing tools|marketing toolkit|what marketing)\b/.test(text);
+  const explicitZoom = routeId === "product-zenler-live-zoom" && /\b(zoom|one to one|121|charge for live|charge for zoom|enterprise level)\b/.test(text);
+  const explicitQuiz = routeId === "product-quizzes-surveys" && /\b(quiz|quizzes|survey|surveys)\b/.test(text);
+
+  return asksIfZenlerHasFeature || asksWhatZenlerHas || asksHowFeatureWorks || asksSubscription
+    || explicitPricing || explicitMarketing || explicitZoom || explicitQuiz;
 }
 
 function isUnknownFeatureQuery(query) {
@@ -257,6 +313,11 @@ function minimumScoreForQuery(query, faq) {
   if (!tokens.length) return 0;
   if (faq.curated) return 8;
   return tokens.length <= 2 ? 7 : 10;
+}
+
+function authoritativeFaqScore(query) {
+  const tokens = tokenize(query);
+  return tokens.length <= 2 ? 14 : 18;
 }
 
 function searchFaqs(query) {
