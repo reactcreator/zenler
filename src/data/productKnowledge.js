@@ -1,5 +1,24 @@
 export const productKnowledge = [
   {
+    id: "product-zenler-overview",
+    category: "Zenler Product Guide",
+    question: "What is Zenler?",
+    answer:
+      "Zenler is an all-in-one platform for creating, selling and growing an online education business. It brings the main tools a course creator, coach or membership owner needs into one connected system: online courses, coaching, memberships, communities, marketing funnels, landing pages, email broadcasts, Zenler Mail, automations, blogs, SEO tools, payments, coupons, affiliates, analytics and Zenler Live for live classes, webinars, interactive webinars, live streams and one-to-one bookings. Instead of stitching together lots of separate tools, Zenler lets you build your site, deliver learning, market your offers, run live sessions, manage students and sell from the same platform.",
+    keywords: [
+      "what is zenler", "what does zenler do", "all in one platform", "all-in-one platform",
+      "online course platform", "course creator platform", "features", "overview", "create sell grow",
+      "courses", "coaching", "memberships", "communities", "funnels", "email", "automations",
+      "blog", "seo", "payments", "analytics", "zenler live", "webinars"
+    ],
+    resources: [
+      { title: "Zenler official site", url: "https://www.newzenler.com/" },
+      { title: "Zenler Features", url: "https://www.newzenler.com/features" },
+      { title: "Zenler Online Course Platform", url: "https://www.newzenler.com/features/online-course-platform" },
+      { title: "The Complete Guide to Zenler", url: "https://tutorials.newzenler.com/courses/the-complete-guide-to-zenler" }
+    ]
+  },
+  {
     id: "product-marketing-tools",
     category: "Zenler Product Guide",
     question: "What marketing tools does Zenler have?",

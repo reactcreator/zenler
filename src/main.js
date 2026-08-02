@@ -154,6 +154,7 @@ const quickQuestions = [
 ];
 
 const relatedGuideIds = {
+  "product-zenler-overview": ["product-marketing-tools", "product-drip-courses", "product-lives"],
   "product-marketing-tools": ["product-funnels", "product-email-automations", "product-blog-seo", "product-communities", "product-lives"],
   "product-drip-courses": ["product-memberships", "product-email-automations"],
   "product-lives": ["product-zenler-live-zoom", "product-communities", "product-email-automations"],
@@ -270,7 +271,7 @@ const defaultResources = [
 ];
 
 const knownFeatureAliases = [
-  "marketing", "marketing tools", "tools", "features",
+  "zenler", "all in one", "all-in-one", "platform", "overview", "marketing", "marketing tools", "tools", "features",
   "zoom", "zenler live", "live", "webinar", "webinars", "live class", "live classes",
   "course", "courses", "membership", "memberships", "community", "communities",
   "funnel", "funnels", "marketing funnel", "email", "emails", "broadcast", "broadcasts",
@@ -283,6 +284,7 @@ const knownFeatureAliases = [
 ];
 
 const productIntentRoutes = [
+  { id: "product-zenler-overview", pattern: /\b(what is zenler|what's zenler|what does zenler do|explain zenler|zenler overview|all[-\s]?in[-\s]?one platform|online course platform)\b/i },
   { id: "product-pricing-plans", pattern: /\b(pricing|price|prices|plans|starter|pro|premium|cost|allowances|limits|transaction fees)\b/i },
   { id: "product-zenler-live-zoom", pattern: /\b(zoom|built[-\s]?in zoom|enterprise[-\s]?level zoom|no zoom subscription|121|one[-\s]?to[-\s]?one|charge for live|charge for zoom)\b/i },
   { id: "product-resources", pattern: /\b(learn zenler|learning zenler|training|tutorial|tutorials|quick start|complete guide|accelerator|60[-\s]?day|where should i start|how do i learn|how can i learn|learn the platform)\b/i },
@@ -431,12 +433,13 @@ function isProductGuideQuestion(query, routeId) {
   const asksSubscription = /\b(do i need|need a|separate)\b.*\b(subscription|zoom)\b/.test(text);
   const explicitPricing = routeId === "product-pricing-plans" && /\b(pricing|price|prices|plans|starter|pro|premium|cost)\b/.test(text);
   const explicitMarketing = routeId === "product-marketing-tools" && /\b(marketing tools|marketing toolkit|what marketing)\b/.test(text);
+  const explicitOverview = routeId === "product-zenler-overview" && /\b(what is zenler|what does zenler do|explain zenler|overview|all in one|all-in-one|platform)\b/.test(text);
   const explicitZoom = routeId === "product-zenler-live-zoom" && /\b(zoom|one to one|121|charge for live|charge for zoom|enterprise level)\b/.test(text);
   const explicitQuiz = routeId === "product-quizzes-surveys" && /\b(quiz|quizzes|survey|surveys)\b/.test(text);
   const explicitLearning = routeId === "product-resources" && /\b(learn|training|tutorial|tutorials|quick start|complete guide|accelerator|60 day|where should i start)\b/.test(text);
 
   return asksIfZenlerHasFeature || asksWhatZenlerHas || asksHowFeatureWorks || asksSubscription
-    || explicitPricing || explicitMarketing || explicitZoom || explicitQuiz || explicitLearning;
+    || explicitPricing || explicitMarketing || explicitOverview || explicitZoom || explicitQuiz || explicitLearning;
 }
 
 function isUnknownFeatureQuery(query) {
