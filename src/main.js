@@ -447,7 +447,7 @@ function renderAgentAnswer(faq, results = []) {
         ? "I can help with Zenler product and support questions. Try asking about Zenler courses, memberships, live sessions, funnels, email, communities, payments, domains, blogs or analytics."
         : isInitial
           ? "Type a Zenler question on the left and I will search the FAQ bank, product knowledge vault, support resources and tutorial links to give you the best support-ready answer. You can ask about courses, memberships, marketing funnels, blogs, communities, live sessions, email, automations, payments, domains, analytics and more."
-          : "I do not have a strong enough Zenler FAQ match for that wording. Try asking it more specifically, for example with the feature name, page area, or workflow you are using."}</p>
+          : "I do not have a strong enough Zenler FAQ match for that wording. Try asking it more specifically with the feature name, page area, or workflow you are using. If you still need help, contact support@zenler.com."}</p>
     `;
   }
 
@@ -560,8 +560,8 @@ function renderEmpty() {
     <div class="empty-state">
       <h3>${offPlatform ? "That is outside the Zenler FAQ scope." : "No FAQ matched that wording."}</h3>
       <p>${offPlatform
-        ? "This assistant is intentionally focused on Zenler. Try a Zenler-specific phrase like custom domain, drip lessons, payments, live sessions, funnels or memberships."
-        : "Try a shorter phrase like custom domain, drip lessons, payments, live sessions or memberships."}</p>
+        ? "This assistant is intentionally focused on Zenler. Try a Zenler-specific phrase like custom domain, drip lessons, payments, live sessions, funnels or memberships. For support, contact support@zenler.com."
+        : "Try a shorter phrase like custom domain, drip lessons, payments, live sessions or memberships. If you still need help, contact support@zenler.com."}</p>
     </div>
   `;
 }
