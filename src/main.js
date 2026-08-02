@@ -1,5 +1,63 @@
-import { faqs } from "./data/faqs.js";
+import { faqs as sourceFaqs } from "./data/faqs.js";
 import "./styles.css";
+
+const offTopicTerms = [
+  "notebook", "notebook lm", "notebooklm", "substack", "twitter", "udemy", "camtasia", "google drive",
+  "google's notebooks", "google notebooks", "youtube channel", "youtube description workflow",
+  "paid subscription on substack"
+];
+
+const zenlerTerms = [
+  "zenler", "course", "lesson", "membership", "site", "page", "funnel", "email", "broadcast",
+  "automation", "community", "live", "webinar", "class", "booking", "payment", "student",
+  "certificate", "domain", "blog", "analytics", "mobile app", "download", "quiz", "survey"
+];
+
+function removeSources(value) {
+  return value
+    .replace(/\sSource:\shttps?:\/\/\S+/g, "")
+    .replace(/\shttps?:\/\/\S+/g, "")
+    .trim();
+}
+
+function isZenlerFaq(faq) {
+  const text = `${faq.category} ${faq.question} ${faq.answer}`.toLowerCase();
+  const question = faq.question.toLowerCase();
+  const hasZenlerSignal = zenlerTerms.some((term) => text.includes(term));
+  const isClearlyOffTopic = offTopicTerms.some((term) => question.includes(term) || text.includes(term));
+  return hasZenlerSignal && !isClearlyOffTopic;
+}
+
+function zenlerizeAnswer(answer) {
+  return removeSources(answer)
+    .replace(/\bZenler Zoom\b/g, "Zenler Live")
+    .replace(/\bZoom cloud recordings\b/gi, "Zenler live-session cloud recordings")
+    .replace(/\bpersonal Zoom account\b/gi, "connected live-session account")
+    .replace(/\bpaid Zoom account\b/gi, "connected live-session account")
+    .replace(/\byour own Zoom account\b/gi, "a connected live-session account")
+    .replace(/\bZoom subscription\b/gi, "separate live-session subscription")
+    .replace(/\bZoom plan\b/gi, "separate live-session plan")
+    .replace(/\bZoom links\b/gi, "Zenler live-session links")
+    .replace(/\bZoom link\b/gi, "Zenler live-session link")
+    .replace(/\bZoom session\b/gi, "Zenler live session")
+    .replace(/\bZoom meeting\b/gi, "Zenler live session")
+    .replace(/\bZoom\b/g, "Zenler Live");
+}
+
+function zenlerizeQuestion(question) {
+  return question
+    .replace(/\bZenler Zoom\b/g, "Zenler Live")
+    .replace(/\bZoom\b/g, "Zenler Live")
+    .replace(/\bNotebook\s*LM\b/gi, "Zenler");
+}
+
+const faqs = sourceFaqs
+  .filter(isZenlerFaq)
+  .map((faq) => ({
+    ...faq,
+    question: zenlerizeQuestion(faq.question),
+    answer: zenlerizeAnswer(faq.answer)
+  }));
 
 const stopWords = new Set([
   "a", "an", "and", "are", "as", "at", "be", "by", "can", "do", "does", "for", "from", "how",
@@ -70,6 +128,11 @@ function searchFaqs(query) {
     .slice(0, 9);
 }
 
+function isOffPlatformQuery(query) {
+  const text = query.toLowerCase();
+  return offTopicTerms.some((term) => text.includes(term));
+}
+
 function confidence(score = 0) {
   if (score >= 24) return "High match";
   if (score >= 12) return "Good match";
@@ -78,7 +141,7 @@ function confidence(score = 0) {
 }
 
 function formatAnswer(answer) {
-  return answer.replace(/\sSource:\shttps?:\/\/\S+/g, "");
+  return removeSources(answer);
 }
 
 function answerIntro(faq) {
@@ -166,11 +229,14 @@ function render() {
 
 function renderAgentAnswer(faq) {
   if (!faq) {
+    const offPlatform = state.query.trim() && isOffPlatformQuery(state.query);
     return `
       <div class="thinking-block">
         <span></span><span></span><span></span>
       </div>
-      <p class="answer-text">Ask a question to search the Zenler FAQ bank.</p>
+      <p class="answer-text">${offPlatform
+        ? "I can help with Zenler product and support questions. Try asking about Zenler courses, memberships, live sessions, funnels, email, communities, payments, domains, blogs or analytics."
+        : "Ask a Zenler product question to search the FAQ bank."}</p>
     `;
   }
 
@@ -215,10 +281,13 @@ function renderResult(faq) {
 }
 
 function renderEmpty() {
+  const offPlatform = state.query.trim() && isOffPlatformQuery(state.query);
   return `
     <div class="empty-state">
-      <h3>No FAQ matched that wording.</h3>
-      <p>Try a shorter phrase like "custom domain", "drip lessons", "payments", or "live webinar".</p>
+      <h3>${offPlatform ? "That is outside the Zenler FAQ scope." : "No FAQ matched that wording."}</h3>
+      <p>${offPlatform
+        ? "This assistant is intentionally focused on Zenler. Try a Zenler-specific phrase like custom domain, drip lessons, payments, live sessions, funnels or memberships."
+        : "Try a shorter phrase like custom domain, drip lessons, payments, live sessions or memberships."}</p>
     </div>
   `;
 }
