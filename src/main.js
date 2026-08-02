@@ -75,7 +75,8 @@ const state = {
   activeCategory: "All",
   query: "",
   selected: null,
-  isThinking: false
+  isThinking: false,
+  resultLimit: 9
 };
 
 const categories = ["All", ...Array.from(new Set(faqs.map((faq) => faq.category)))];
@@ -132,33 +133,41 @@ function scoreFaq(faq, query) {
 
 function productGuideBoost(faq, queryTokens, query) {
   const queryText = query.toLowerCase();
-  const keywordMatches = (faq.keywords || []).filter((keyword) => queryText.includes(keyword)).length;
-  const broadCapabilityQuestion = /\b(what|which|have|include|tools|features|can zenler|does zenler)\b/i.test(query);
+  const keywordMatches = (faq.keywords || []).filter((keyword) => {
+    const keywordText = keyword.toLowerCase();
+    return queryText.includes(keywordText) || keywordText.split(/\s+/).some((part) => queryTokens.includes(part));
+  }).length;
+  const broadCapabilityQuestion = /\b(what|which|have|include|tools|features|platform|all-in-one|can zenler|does zenler)\b/i.test(query);
   const marketingIntent = /\b(marketing|promote|sell|lead|sales|funnel|audience|grow)\b/i.test(query);
-  const topicMatch = queryTokens.some((token) => faq.tokens.includes(token));
+  const generalProductQuestion = broadCapabilityQuestion && /\b(tools|features|platform|all-in-one|include|have)\b/i.test(query);
 
-  let boost = 1.8;
-  if (keywordMatches) boost += keywordMatches * 0.9;
-  if (broadCapabilityQuestion) boost += 1.2;
-  if (marketingIntent && faq.id === "product-marketing-tools") boost += 2.4;
-  if (topicMatch) boost += 0.8;
+  if (!keywordMatches && !generalProductQuestion) return 0.18;
+
+  let boost = 0.9;
+  if (keywordMatches) boost += Math.min(keywordMatches, 5) * 0.55;
+  if (broadCapabilityQuestion && keywordMatches) boost += 0.8;
+  if (marketingIntent && faq.id === "product-marketing-tools") boost += 2.2;
+  if (generalProductQuestion && faq.id === "product-marketing-tools") boost += 1.2;
   return boost;
 }
 
-function searchFaqs(query) {
+function getAllMatches(query) {
   if (isOffPlatformQuery(query)) return [];
 
   const scoped = state.activeCategory === "All"
     ? faqVectors
     : faqVectors.filter((faq) => faq.category === state.activeCategory);
 
-  if (!query.trim()) return scoped.slice(0, 9);
+  if (!query.trim()) return scoped;
 
   return scoped
     .map((faq) => ({ ...faq, score: scoreFaq(faq, query) }))
     .filter((faq) => faq.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 9);
+    .sort((a, b) => b.score - a.score);
+}
+
+function searchFaqs(query) {
+  return getAllMatches(query).slice(0, state.resultLimit);
 }
 
 function isOffPlatformQuery(query) {
@@ -191,7 +200,9 @@ function answerIntro(faq) {
 }
 
 function render() {
-  const results = searchFaqs(state.query);
+  const allResults = getAllMatches(state.query);
+  const results = allResults.slice(0, state.resultLimit);
+  const hasMoreResults = allResults.length > results.length;
   if (!results.some((faq) => String(faq.id) === String(state.selected?.id))) {
     state.selected = results[0] || null;
   }
@@ -210,7 +221,7 @@ function render() {
         <div class="hero-grid">
           <section class="ask-zone" aria-label="Ask a question">
             <p class="eyebrow">Zenler knowledge assistant</p>
-            <h1>Ask a Zenler question and get a support-ready answer.</h1>
+            <h1>ALL-IN-ONE ONLINE COURSE PLATFORM TO CREATE, SELL AND GROW</h1>
             <form class="ask-form">
               <label class="sr-only" for="questionInput">Ask a Zenler question</label>
               <textarea id="questionInput" placeholder="Ask about courses, memberships, domains, payments, webinars, analytics..." rows="4">${escapeHtml(state.query)}</textarea>
@@ -232,7 +243,7 @@ function render() {
                 <span>${state.isThinking ? "Reviewing FAQ bank" : "Ready with sourced guidance"}</span>
               </div>
             </div>
-            ${renderAgentAnswer(state.selected)}
+            ${renderAgentAnswer(state.selected, results)}
           </section>
         </div>
       </section>
@@ -251,13 +262,18 @@ function render() {
           <div class="list-header">
             <div>
               <p class="eyebrow">Matched answers</p>
-              <h2>${results.length ? `${results.length} best matches` : "No direct matches yet"}</h2>
+              <h2>${allResults.length ? `${Math.min(results.length, allResults.length)} of ${allResults.length} best matches` : "No direct matches yet"}</h2>
             </div>
-            <a href="/Zenler_FAQ_Content_Analytics_Report.pdf">Analytics PDF</a>
           </div>
           <div class="cards">
             ${results.length ? results.map((faq) => renderResult(faq)).join("") : renderEmpty()}
           </div>
+          ${hasMoreResults ? `
+            <div class="lazy-load-zone" data-lazy-load="true">
+              <span></span>
+              <button class="load-more-button" type="button">Load more answers</button>
+            </div>
+          ` : ""}
         </section>
       </section>
     </main>
@@ -266,7 +282,7 @@ function render() {
   attachEvents();
 }
 
-function renderAgentAnswer(faq) {
+function renderAgentAnswer(faq, results = []) {
   if (!faq) {
     const offPlatform = state.query.trim() && isOffPlatformQuery(state.query);
     return `
@@ -300,9 +316,30 @@ function renderAgentAnswer(faq) {
     <h2>${escapeHtml(faq.question)}</h2>
     <p class="answer-text">${escapeHtml(answerIntro(faq))}</p>
     ${renderResources(faq)}
+    ${renderRelatedQuickAnswers(faq, results)}
     <div class="support-actions">
       <button class="ghost-button" type="button" data-query="${escapeHtml(faq.question)}">Ask this again</button>
       <button class="ghost-button" type="button" data-category="${escapeHtml(faq.category)}">View ${escapeHtml(faq.category)}</button>
+    </div>
+  `;
+}
+
+function renderRelatedQuickAnswers(faq, results) {
+  const related = results
+    .filter((item) => String(item.id) !== String(faq.id))
+    .slice(0, 3);
+
+  if (!related.length) return "";
+
+  return `
+    <div class="related-answers">
+      <p>Related quick answers</p>
+      ${related.map((item) => `
+        <button class="related-answer" type="button" data-query="${escapeHtml(item.question)}">
+          <span>${escapeHtml(item.category)}</span>
+          <b>${escapeHtml(item.question)}</b>
+        </button>
+      `).join("")}
     </div>
   `;
 }
@@ -352,6 +389,7 @@ function attachEvents() {
 
   document.querySelector("#questionInput").addEventListener("input", (event) => {
     state.query = event.target.value;
+    state.resultLimit = 9;
     state.selected = searchFaqs(state.query)[0] || null;
     render();
     document.querySelector("#questionInput").focus();
@@ -365,6 +403,7 @@ function attachEvents() {
   document.querySelectorAll("[data-category]").forEach((button) => {
     button.addEventListener("click", () => {
       state.activeCategory = button.dataset.category;
+      state.resultLimit = 9;
       state.selected = searchFaqs(state.query)[0] || null;
       render();
     });
@@ -377,12 +416,28 @@ function attachEvents() {
       render();
     });
   });
+
+  document.querySelector(".load-more-button")?.addEventListener("click", () => {
+    loadMoreResults();
+  });
+
+  const lazyZone = document.querySelector("[data-lazy-load='true']");
+  if (lazyZone && "IntersectionObserver" in window) {
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        observer.disconnect();
+        loadMoreResults();
+      }
+    }, { rootMargin: "220px 0px" });
+    observer.observe(lazyZone);
+  }
 }
 
 function askQuestion(query) {
   state.query = query;
   state.isThinking = true;
   state.selected = null;
+  state.resultLimit = 9;
   render();
 
   window.setTimeout(() => {
@@ -391,6 +446,11 @@ function askQuestion(query) {
     state.isThinking = false;
     render();
   }, 850);
+}
+
+function loadMoreResults() {
+  state.resultLimit += 9;
+  render();
 }
 
 function escapeHtml(value) {

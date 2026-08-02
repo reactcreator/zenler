@@ -87,6 +87,19 @@ export const productKnowledge = [
     ]
   },
   {
+    id: "product-memberships",
+    category: "Memberships",
+    question: "Can I create memberships in Zenler?",
+    answer:
+      "Yes. Zenler lets you create membership-style offers by combining courses, bundles, communities, recurring pricing, protected content, email, automations and live sessions. A membership can include ongoing course content, community access, member-only live classes or webinars, downloads, coaching touchpoints and recurring subscriptions. The strongest setup usually pairs a clear member offer with a private community, a simple onboarding sequence and recurring content or live value.",
+    keywords: ["membership", "memberships", "members", "recurring", "subscription", "member only", "protected content", "community access"],
+    resources: [
+      { title: "Zenler Membership Site Software", url: "https://www.newzenler.com/features/membership-site-software" },
+      { title: "Create Membership in Zenler 2026", url: "https://www.newzenler.com/blog/create-membership-zenler-2026" },
+      { title: "Communities support collection", url: "https://support.newzenler.com/en/collections/1697651-communities" }
+    ]
+  },
+  {
     id: "product-monetisation",
     category: "Payments",
     question: "How does Zenler help me sell and monetise my knowledge?",

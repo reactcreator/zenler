@@ -129,15 +129,17 @@ p {
 }
 
 h1 {
-  max-width: 820px;
+  max-width: 1120px;
   margin: 0 0 26px;
   font-family: "Open Sans", Inter, ui-sans-serif, system-ui, sans-serif;
   font-weight: 800;
-  font-size: clamp(2.5rem, 6vw, 5.8rem);
-  line-height: 0.94;
+  font-size: clamp(2.45rem, 4.8vw, 5.4rem);
+  line-height: 1.06;
   letter-spacing: 0;
   transform: scaleX(0.985);
-  transform-origin: left center;
+  transform-origin: center;
+  text-align: center;
+  text-transform: uppercase;
 }
 
 .ask-form {
@@ -332,6 +334,50 @@ textarea:focus {
   border-color: rgba(36, 214, 181, 0.62);
 }
 
+.related-answers {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.related-answers p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.related-answer {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.related-answer span,
+.related-answer b {
+  display: block;
+}
+
+.related-answer span {
+  margin-bottom: 3px;
+  color: #d9d2ff;
+  font-size: 0.74rem;
+  font-weight: 850;
+}
+
+.related-answer b {
+  font-size: 0.9rem;
+  line-height: 1.24;
+}
+
+.related-answer:hover {
+  border-color: rgba(36, 214, 181, 0.62);
+}
+
 .support-actions .ghost-button {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.2);
@@ -440,16 +486,36 @@ textarea:focus {
   font-size: clamp(1.4rem, 2vw, 2rem);
 }
 
-.list-header a {
-  color: var(--violet);
-  font-weight: 850;
-  text-decoration: none;
-}
-
 .cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
+}
+
+.lazy-load-zone {
+  min-height: 92px;
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  padding: 18px 0 6px;
+}
+
+.lazy-load-zone span {
+  width: 42px;
+  height: 4px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--violet), var(--aqua), var(--gold));
+  background-size: 180% 100%;
+  animation: shimmerLine 1.4s ease-in-out infinite;
+}
+
+.load-more-button {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--ink);
+  padding: 0 16px;
+  font-weight: 850;
 }
 
 .result-card,
@@ -515,6 +581,11 @@ textarea:focus {
   to { transform: rotate(360deg); }
 }
 
+@keyframes shimmerLine {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
 @media (max-width: 1080px) {
   .hero-grid,
   .workspace {
@@ -564,5 +635,11 @@ textarea:focus {
   .answer-card {
     min-height: 360px;
     padding: 22px;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.08;
+    transform: none;
   }
 }
